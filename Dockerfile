@@ -8,13 +8,10 @@ RUN pip install --prefix=/install -r /requirement.txt
 
 
 FROM base
-RUN apk add ruby
-RUN apk add git
+RUN apk update && apk add --virtual build-dependencies build-base ruby ruby-dev git
+RUN gem install bundler
 RUN git clone https://github.com/urbanadventurer/WhatWeb.git
 WORKDIR /WhatWeb
-RUN apk update && apk add --virtual build-dependencies build-base
-RUN apk add ruby-dev
-RUN gem install bundler
 RUN bundle install
 
 COPY --from=builder /install /usr/local
