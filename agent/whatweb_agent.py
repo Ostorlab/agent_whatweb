@@ -28,7 +28,7 @@ class WhatWebAgent(agent.Agent):
         super().__init__(agent_definition, agent_settings)
 
     def process(self, message: msg.Message) -> None:
-        """Starts a tsunami scan, wait for the scan to finish,
+        """Starts a whatweb scan, wait for the scan to finish,
         and emit the results.
 
         Args:
