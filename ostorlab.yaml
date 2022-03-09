@@ -4,5 +4,21 @@ version: 0.0.1
 description: Whatweb is a web technology fingerprinter capable of detecting CMS, blogging platform, analytics pacakges, JS libraries, web servier and embeded devices.
 in_selectors: [ ]
 out_selectors: [ ]
+args:
+ - name: "reference_scan_id"
+   type: "number"
+   description: "scan id in reporting_engine"
+ - name: "api_reporting_engine_base_url"
+   type: "string"
+   description: "API URL"
+   value: "https://api.ostorlab.co/apis/robot_graphql"
+ - name: "reporting_engine_token"
+   type: "string"
+   description: "Reporting engine token."
+   value: "9659f19efc5613429c99c960c2f4e8f498b56ab0"
+ - name: "fingerprints_queue_max_size"
+   type: "number"
+   description: "Queue max size to flush fingerprints."
+   value: 10
 docker_file_path: Dockerfile
 docker_build_root: .
