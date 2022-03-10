@@ -5,31 +5,9 @@ import logging
 import enum
 from typing import List, Dict, Optional
 from dataclasses import dataclass
+from agent import definitions as whatweb_definitions
 
 logger = logging.getLogger(__name__)
-
-
-class FingerprintType(enum.Enum):
-    PROGRAMMING_LANGUAGE = 1
-    JAVA_LIBRARY = 2
-    ELF_LIBRARY = 3
-    IOS_FRAMEWORK = 4
-    DOTNET_FRAMEWORK = 5
-    FLUTTER_FRAMEWORK = 6
-    JAVASCRIPT_LIBRARY = 7
-    CORDOVA_FRAMEWORK = 8
-    MACHO_LIBRARY = 9
-    PE_LIBRARY = 10
-    BACKEND_COMPONENT = 11
-
-@dataclass
-class Fingerprint:
-    type: FingerprintType
-    name: str
-    version: Optional[str]
-    detail: str
-    detail_format: str
-    dna: str
 
 
 def _make_call(api_reporting_engine_base_url: str, reporting_engine_token: str,
@@ -54,7 +32,7 @@ def _make_call(api_reporting_engine_base_url: str, reporting_engine_token: str,
 
 
 def call_add_fingerprints(api_reporting_engine_base_url: str, reporting_engine_token: str,
-                          scan_id: int, fingerprints: List[Fingerprint]):
+                          scan_id: int, fingerprints: List[whatweb_definitions.Fingerprint]):
     """Defines the query to mark a scan as stopped.
     Args:
         api_reporting_engine_base_url: API url
@@ -68,11 +46,14 @@ def call_add_fingerprints(api_reporting_engine_base_url: str, reporting_engine_t
             addFingerprints(scanId: $scanId, fingerprints: $fingerprints) {
                fingerprints {
                   id
+                  name
+                  version
+                  detail
                }
             }
          }
         """
-
+    print('Fingerprint ', fingerprints[0])
     variables = {
         'scanId': scan_id,
         'fingerprints': [{

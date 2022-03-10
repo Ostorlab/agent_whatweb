@@ -12,15 +12,9 @@ from ostorlab.agent import agent
 from ostorlab.agent import message as msg
 from ostorlab.agent import definitions as agent_definitions
 from ostorlab.runtimes import definitions as runtime_definitions
-from ostorlab.utils import defintions
 
 from agent import apis
-from agent.whatweb import whatweb
-
-@dataclass
-class Target:
-    """Data Class for whatweb target."""
-    address: str
+from agent import definitions as whatweb_definitions
 
 logging.basicConfig(
     format='%(message)s',
@@ -29,6 +23,16 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 logger.setLevel('DEBUG')
+
+BLACKLISTED_PLUGINS = ['X-Frame-Options', 'RedirectLocation',
+                       'Cookies', 'Access-Control-Allow-Methods', 'Content-Security-Policy',
+                       'X-Forwarded-For', 'Via-Proxy', 'Allow', 'Strict-Transport-Security',
+                       'X-XSS-Protection', 'x-pingback', 'Strict-Transport-Security',
+                       'UncommonHeaders', 'HTML5', 'Script', 'Title', 'Email', 'Meta-Author',
+                       'Frame', 'PasswordField', 'MetaGenerator', 'Object']
+FINGERPRINT_TYPE = {
+    'jquery': apis.FingerprintType.JAVASCRIPT_LIBRARY
+}
 
 
 class WhatWebAgent(agent.Agent):
@@ -40,10 +44,13 @@ class WhatWebAgent(agent.Agent):
         super().__init__(agent_definition, agent_settings)
         self._fingerprints_queue = []
         self._reporting_engine_token = self.args.get('reporting_engine_token')
-        self._api_reporting_engine_base_url = self.args.get('api_reporting_engine_base_url')
-        self._fingerprints_queue_max_size = int(self.args.get('fingerprints_queue_max_size'))
+        self._api_reporting_engine_base_url = self.args.get(
+            'api_reporting_engine_base_url')
+        self._fingerprints_queue_max_size = int(
+            self.args.get('fingerprints_queue_max_size'))
         self._reference_scan_id: int = int(self.args.get('reference_scan_id'))
-        self._output_file = tempfile.NamedTemporaryFile(suffix='.json', prefix='whatweb', dir='/tmp', )
+        self._output_file = tempfile.NamedTemporaryFile(
+            suffix='.json', prefix='whatweb', dir='/tmp', )
 
     def _start_scan(self, target, output_file: str):
         """Run a whatweb scan using python subprocess.
@@ -60,10 +67,10 @@ class WhatWebAgent(agent.Agent):
                            self._get_target_address(target)
                            ]
         process = subprocess.Popen(whatweb_command, stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE, cwd='/WhatWeb')
+                                   stderr=subprocess.PIPE, cwd='/WhatWeb')
         process.communicate()[0].decode('utf-8')
 
-    def _get_target_address(self, target: Target):
+    def _get_target_address(self, target: whatweb_definitions.Target):
         """Select the address for whatweb CLI based on the target type.
 
         Args:
@@ -74,7 +81,7 @@ class WhatWebAgent(agent.Agent):
         """
         return target.address
 
-    def _parse_result(self, output_file, target: Target):
+    def _parse_result(self, output_file, target: whatweb_definitions.Target):
         """After the scan is done, parse the output json file into a dict of the scan findings.
         returns:
             - scan results.
@@ -89,20 +96,22 @@ class WhatWebAgent(agent.Agent):
                         if isinstance(result, list):
                             for list_plugin in result:
                                 plugin = list_plugin[0]
-                                values = list_plugin[1]
-                                detail = f"Found `{plugin}` in `{self._get_target_address(target)}`"
-                                versions = None
-                                name = plugin
-                                for value in values:
-                                    if 'regexp' in value:
-                                        detail = f"Found `{plugin}` in `{self._get_target_address(target)}`: `{value['regexp']}`"
-                                    if 'version' in value:
-                                        versions = value['version']
-                                    if 'string' in value:
-                                        name = str(value['string'])
-                                self._send_detected_fingerprints(
-                                    self._get_target_address(target), name, detail, versions)
-                logger.info('Scan is done Parsing the results from %s.', output_file.name)
+                                if plugin not in BLACKLISTED_PLUGINS:
+                                    values = list_plugin[1]
+                                    detail = f"Found `{plugin}` in `{self._get_target_address(target)}`"
+                                    versions = None
+                                    name = plugin
+                                    for value in values:
+                                        if 'regexp' in value:
+                                            detail = f"Found `{plugin}` in `{self._get_target_address(target)}`: `{value['regexp']}`"
+                                        if 'version' in value:
+                                            versions = value['version']
+                                        if 'string' in value:
+                                            name = str(value['string'])
+                                    self._send_detected_fingerprints(
+                                        self._get_target_address(target), name, detail, versions)
+                logger.info(
+                    'Scan is done Parsing the results from %s.', output_file.name)
         except Exception as e:
             logger.error(
                 f'Exception while processing {output_file} with message {e}')
@@ -118,28 +127,30 @@ class WhatWebAgent(agent.Agent):
                 hostname, name, detail)
 
     def _send_detected_fingerprints_with_version(self, hostname, name, detail, versions):
+        type = FINGERPRINT_TYPE[name.lower()] if name.lower(
+        ) in FINGERPRINT_TYPE else whatweb_definitions.FingerprintType.BACKEND_COMPONENT
         if isinstance(versions, list):
             for version in versions:
-                fingerprint = apis.Fingerprint(type=type, name=name,
+                fingerprint = whatweb_definitions.Fingerprint(type=type, name=name,
                                                version=version,
                                                detail=detail,
                                                detail_format='markdown',
                                                dna=self._compute_string_dna(detail, name, type, version))
                 self._add_fingerprint(fingerprint)
-                # self.send_message(
+                # self.emit(
                 #     WhatWeb.selector('fingerprint', 'lib'),
                 #     name=fingerprint.name,
                 #     version=str(fingerprint.version),
                 #     type=fingerprint.type.name
                 # )
         else:
-            fingerprint = apis.Fingerprint(type=type, name=name,
+            fingerprint = whatweb_definitions.Fingerprint(type=type, name=name,
                                            version=str(versions),
                                            detail=detail,
                                            detail_format='markdown',
                                            dna=self._compute_string_dna(detail, name, type, versions))
             self._add_fingerprint(fingerprint)
-            # self.send_message(
+            # self.emit(
             #     WhatWebAgent.selector('fingerprint', 'lib'),
             #     name=fingerprint.name,
             #     version=str(fingerprint.version),
@@ -147,23 +158,25 @@ class WhatWebAgent(agent.Agent):
             # )
 
     def _send_detected_fingerprints_without_version(self, hostname, name, detail):
-        fingerprint = apis.Fingerprint(type=type, name=name,
-                                  version=None,
-                                  detail=detail,
-                                  detail_format='markdown',
-                                  dna=self._compute_string_dna(detail, name, type))
+        type = FINGERPRINT_TYPE[name.lower()] if name.lower(
+        ) in FINGERPRINT_TYPE else whatweb_definitions.FingerprintType.BACKEND_COMPONENT
+        fingerprint = whatweb_definitions.Fingerprint(type=type, name=name,
+                                       version=None,
+                                       detail=detail,
+                                       detail_format='markdown',
+                                       dna=self._compute_string_dna(detail, name, type))
 
         self._add_fingerprint(fingerprint)
-        # self.send_message(
+        # self.emit(
         #     WhatWebAgent.selector('fingerprint', 'lib'),
         #     name=fingerprint.name,
         #     version=str(fingerprint.version),
         #     type=fingerprint.type.name
         # )
 
-    def _add_fingerprint(self, fingerprint: apis.Fingerprint):
+    def _add_fingerprint(self, fingerprint: whatweb_definitions.Fingerprint):
         self._fingerprints_queue.append(fingerprint)
-        if len(self._fingerprints_queue) > self._fingerprints_queue_max_size:
+        if len(self._fingerprints_queue) > 1:
             self._flush_fingerprints()
 
     def _flush_fingerprints(self):
@@ -172,7 +185,7 @@ class WhatWebAgent(agent.Agent):
                                        self._reference_scan_id, self._fingerprints_queue)
             self._fingerprints_queue = []
 
-    def scan(self, target: Target):
+    def scan(self, target: whatweb_definitions.Target):
         """Start a scan, wait for the scan results and clean the scan output.
 
            returns:
@@ -191,7 +204,7 @@ class WhatWebAgent(agent.Agent):
 
     def _compute_string_dna(self, detail, plugin, type, version=None):
         h = hashlib.md5()
-        # h.update(str(self.reference_scan_id).encode())
+        h.update(str(self._reference_scan_id).encode())
         h.update(str(type).encode())
         h.update(plugin.encode())
         h.update(detail.encode())
@@ -209,7 +222,7 @@ class WhatWebAgent(agent.Agent):
         data = {
             'url': 'ostorlab.co'
         }
-        target = whatweb.Target(address=data['url'])
+        target = whatweb_definitions.Target(address=data['url'])
         self.scan(target=target)
         logger.info('Scan finished Number of findings')
 
@@ -228,10 +241,10 @@ class WhatWebAgent(agent.Agent):
 # testing code: to be removed
 if __name__ == '__main__':
     token = {
-                'name': 'reporting_engine_token',
+        'name': 'reporting_engine_token',
                 'type': 'string',
                 'value': '9659f19efc5613429c99c960c2f4e8f498b56ab0'
-            }
+    }
     url = {
         'name': 'api_reporting_engine_base_url',
         'type': 'string',
@@ -245,7 +258,7 @@ if __name__ == '__main__':
     scan_id = {
         'name': 'reference_scan_id',
         'type': 'number',
-        'value': 52063
+        'value': 1
     }
 
     agent_definition = agent_definitions.AgentDefinition(
