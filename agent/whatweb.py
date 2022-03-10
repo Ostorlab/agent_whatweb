@@ -1,11 +1,9 @@
 """WhatWeb Agent : Agent responsible for finger-printing a website."""
-
-from dbm.ndbm import library
 import logging
 import json
 import subprocess
 import tempfile
-import hashlib
+from typing import Union
 from rich import logging as rich_logging
 
 from ostorlab.agent import agent
@@ -43,10 +41,6 @@ class WhatWebAgent(agent.Agent):
         """Inits the whatweb agent."""
         super().__init__(agent_definition, agent_settings)
         self._selector = 'v3.fingerprint.domain_name.library'
-        self._fingerprints_queue = []
-        self._fingerprints_queue_max_size = int(
-            self.args.get('fingerprints_queue_max_size'))
-        self._reference_scan_id: int = int(self.args.get('reference_scan_id'))
 
     def _start_scan(self, target, output_file: str):
         """Run a whatweb scan using python subprocess.
@@ -92,20 +86,19 @@ class WhatWebAgent(agent.Agent):
                                         versions = value['version']
                                     if 'string' in value:
                                         name = str(value['string'])
-                                self._send_detected_fingerprints(target.domain_name, name, detail, versions)
+                                self._send_detected_fingerprints(target.domain_name, name, versions)
                 logger.info(
                     'Scan is done Parsing the results from %s.', output_file.name)
         except Exception as e:
             logger.error(
                 f'Exception while processing {output_file} with message {e}')
 
-    def _send_detected_fingerprints(self, domain_name: str, name: str, detail: str, versions: str):
+    def _send_detected_fingerprints(self, domain_name: str, name: str, versions: Union[list, str]):
         """Emits the identified fingerprints.
 
         Args:
             domain_name: The domain name.
             name: The name of the website.
-            detail: Fingerprint detail.
             versions: The versions identified by WhatWeb Agent
         """
 
@@ -113,50 +106,21 @@ class WhatWebAgent(agent.Agent):
         ) in FINGERPRINT_TYPE else whatweb_definitions.FingerprintType.BACKEND_COMPONENT
         if isinstance(versions, list):
             for version in versions:
-                fingerprint = whatweb_definitions.Fingerprint(type=type, name=name,
-                                                              version=version,
-                                                              detail=detail,
-                                                              detail_format='markdown',
-                                                              dna=self._compute_string_dna(detail, name, type, version))
                 msg_data = {
                     'domain_name': domain_name,
-                    'library_name': fingerprint.name,
-                    'library_version': str(fingerprint.version),
-                    'library_type': fingerprint.type.name
+                    'library_name': name,
+                    'library_version': str(version),
+                    'library_type': type.name
                 }
-
-            self._add_fingerprint(fingerprint)
             self.emit(selector=self._selector, data=msg_data)
         else:
-            fingerprint = whatweb_definitions.Fingerprint(type=type, name=name,
-                                                          version=str(
-                                                              versions),
-                                                          detail=detail,
-                                                          detail_format='markdown',
-                                                          dna=self._compute_string_dna(detail, name, type, versions))
             msg_data = {
                 'domain_name': domain_name,
-                'library_name': fingerprint.name,
-                'library_version': str(fingerprint.version),
-                'library_type': fingerprint.type.name
+                'library_name': name,
+                'library_version': str(version),
+                'library_type': type.name
             }
-
-            self._add_fingerprint(fingerprint)
             self.emit(selector=self._selector, data=msg_data)
-
-    def _add_fingerprint(self, fingerprint: whatweb_definitions.Fingerprint):
-        """Add a fingerprint to the queue.
-
-        Args:
-            fingerprint (whatweb_definitions.Fingerprint): The fingerprint to add to the queue.
-        """
-        self._fingerprints_queue.append(fingerprint)
-        if len(self._fingerprints_queue) > self._fingerprints_queue_max_size:
-            self._flush_fingerprints()
-
-    def _flush_fingerprints(self):
-        """Empties the queue containing fingerprints."""
-        self._fingerprints_queue = []
 
     def _scan(self, target: whatweb_definitions.Target):
         """Start a scan, wait for the scan results and clean the scan output.
@@ -169,24 +133,6 @@ class WhatWebAgent(agent.Agent):
             fp.seek(0)
             findings = self._parse_result(target, fp)
         return findings
-
-    def _compute_string_dna(self, detail, plugin, type, version=None):
-        """Computes the DNA of the fingerprint
-
-        Args:
-            detail: The detail of the identified fingerprint.
-            plugin: The plugin identified by WhatWeb.
-            type: The type of plugin identified by WhatWeb.
-            version: The version of the target domain.
-        """
-        h = hashlib.md5()
-        h.update(str(self._reference_scan_id).encode())
-        h.update(str(type).encode())
-        h.update(plugin.encode())
-        h.update(detail.encode())
-        if version:
-            h.update(version.encode())
-        return h.hexdigest()
 
     def process(self, message: msg.Message) -> None:
         """Starts a whatweb scan, wait for the scan to finish,

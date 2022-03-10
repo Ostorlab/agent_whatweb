@@ -1,7 +1,6 @@
 """Data types used by the whatweb agent."""
 
 import enum
-from typing import Optional
 from dataclasses import dataclass
 
 @dataclass
@@ -24,13 +23,3 @@ class FingerprintType(enum.Enum):
     PE_LIBRARY = 10
     BACKEND_COMPONENT = 11
 
-
-@dataclass
-class Fingerprint:
-    """Data Class for a fingerprint identified by whatweb."""
-    type: FingerprintType
-    name: str
-    version: Optional[str]
-    detail: str
-    detail_format: str
-    dna: str

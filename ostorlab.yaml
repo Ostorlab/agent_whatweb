@@ -1,16 +1,8 @@
 kind: Agent
 name: whatweb
 version: 0.0.1
-description: Whatweb is a web technology fingerprinter capable of detecting CMS, blogging platform, analytics pacakges, JS libraries, web servier and embeded devices.
+description: whatweb is a web technology fingerprinter capable of detecting CMS, blogging platform, analytics packages, JS libraries, web server and embedded devices.
 in_selectors: [ ]
 out_selectors: [ ]
-args:
- - name: "reference_scan_id"
-   type: "number"
-   description: "scan id in reporting_engine"
- - name: "fingerprints_queue_max_size"
-   type: "number"
-   description: "Queue max size to flush fingerprints."
-   value: 10
 docker_file_path: Dockerfile
 docker_build_root: .
