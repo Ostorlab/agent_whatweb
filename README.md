@@ -15,7 +15,7 @@ _Whatweb is a web technology fingerprinter capable of detecting CMS, blogging pl
 <img src="https://github.com/Ostorlab/agent_whatweb/blob/main/images/logo.png" alt="agent-whatweb" />
 </p>
 
-This repository is an implementation of [Ostorlab Agent](https://pypi.org/project/ostorlab/) for the [Whatweb Fingerprinter](https://github.com/google/whatweb-security-scanner).
+This repository is an implementation of [Ostorlab Agent](https://pypi.org/project/ostorlab/) for the [Whatweb Fingerprinter](https://github.com/urbanadventurer/WhatWeb.git).
 
 ## Getting Started
 To perform your first scan, simply run the following command.

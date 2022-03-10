@@ -36,20 +36,17 @@ WHATWEB_PATH = './whatweb'
 WHATWEB_DIRECTORY = '/WhatWeb'
 
 class WhatWebAgent(agent.Agent):
-    """Agent responsible for identifying a website."""
+    """Agent responsible for finger-printing a website."""
 
     def __init__(self, agent_definition: agent_definitions.AgentDefinition,
                  agent_settings: runtime_definitions.AgentSettings) -> None:
         """Inits the whatweb agent."""
         super().__init__(agent_definition, agent_settings)
-        # self._selector = 'v3.fingerprint.domain_name.library'
-        self._selector = 'v3.report.vulnerability' # to replace after ostorlab new relase is made
+        self._selector = 'v3.fingerprint.domain_name.library'
         self._fingerprints_queue = []
         self._fingerprints_queue_max_size = int(
             self.args.get('fingerprints_queue_max_size'))
         self._reference_scan_id: int = int(self.args.get('reference_scan_id'))
-        self._output_file = tempfile.NamedTemporaryFile(
-            suffix='.json', prefix='whatweb', dir='/tmp', )
 
     def _start_scan(self, target, output_file: str):
         """Run a whatweb scan using python subprocess.
@@ -64,38 +61,38 @@ class WhatWebAgent(agent.Agent):
                            f'--log-json-verbose={output_file}',
                            target.domain_name
                            ]
-        process = subprocess.Popen(whatweb_command, stdout=subprocess.PIPE,
+        subprocess.Popen(whatweb_command, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE, cwd=WHATWEB_DIRECTORY)
-        process.communicate()[0].decode('utf-8')
 
     def _parse_result(self, target: whatweb_definitions.Target, output_file):
         """After the scan is done, parse the output json file into a dict of the scan findings."""
+        print('AAA')
         try:
-            with output_file as f:
-                # whatweb writes duplicate lines in some cases, breaking json. We process only the first line.
-                file_content = f.readlines()
-                if file_content is not None and len > 0:
-                    results = json.loads(file_content[0])
-                    for result in results:
-                        if isinstance(result, list):
-                            for list_plugin in result:
-                                if len(list_plugin) > 0:
-                                    plugin = list_plugin[0]
-                                else:
-                                    plugin = list_plugin
-                                if plugin not in BLACKLISTED_PLUGINS:
-                                    values = list_plugin[1]
-                                    detail = f"Found `{plugin}` in `{target.domain_name}`"
-                                    versions = None
-                                    name = plugin
-                                    for value in values:
-                                        if 'regexp' in value:
-                                            detail = f"Found `{plugin}` in `{target.domain_name}`: `{value['regexp']}`"
-                                        if 'version' in value:
-                                            versions = value['version']
-                                        if 'string' in value:
-                                            name = str(value['string'])
-                                    self._send_detected_fingerprints(target.domain_name, name, detail, versions)
+            # whatweb writes duplicate lines in some cases, breaking json. We process only the first line.
+            file_content = output_file.readlines()
+            if file_content is not None and len(file_content) > 0:
+                results = json.loads(file_content[0])
+                print('Res ', results)
+                for result in results:
+                    if isinstance(result, list):
+                        for list_plugin in result:
+                            if len(list_plugin) > 0:
+                                plugin = list_plugin[0]
+                            else:
+                                plugin = list_plugin
+                            if plugin not in BLACKLISTED_PLUGINS:
+                                values = list_plugin[1]
+                                detail = f"Found `{plugin}` in `{target.domain_name}`"
+                                versions = ''
+                                name = plugin
+                                for value in values:
+                                    if 'regexp' in value:
+                                        detail = f"Found `{plugin}` in `{target.domain_name}`: `{value['regexp']}`"
+                                    if 'version' in value:
+                                        versions = value['version']
+                                    if 'string' in value:
+                                        name = str(value['string'])
+                                self._send_detected_fingerprints(target.domain_name, name, detail, versions)
                 logger.info(
                     'Scan is done Parsing the results from %s.', output_file.name)
         except Exception as e:
@@ -111,31 +108,16 @@ class WhatWebAgent(agent.Agent):
             detail: Fingerprint detail.
             versions: The versions identified by WhatWeb Agent
         """
-        if versions:
-            self._send_detected_fingerprints_with_version(
-                domain_name, name, detail, versions)
-        else:
-            self._send_detected_fingerprints_without_version(
-                domain_name, name, detail)
 
-    def _send_detected_fingerprints_with_version(self, domain_name: str, name: str, detail: str, versions: str):
-        """Emits the identified fingerprints.
-
-        Args:
-            domain_name: The domain name.
-            name: The name of the website.
-            detail: Fingerprint detail.
-            versions: The versions identified by WhatWeb Agent
-        """
         type = FINGERPRINT_TYPE[name.lower()] if name.lower(
         ) in FINGERPRINT_TYPE else whatweb_definitions.FingerprintType.BACKEND_COMPONENT
         if isinstance(versions, list):
             for version in versions:
                 fingerprint = whatweb_definitions.Fingerprint(type=type, name=name,
-                                               version=version,
-                                               detail=detail,
-                                               detail_format='markdown',
-                                               dna=self._compute_string_dna(detail, name, type, version))
+                                                              version=version,
+                                                              detail=detail,
+                                                              detail_format='markdown',
+                                                              dna=self._compute_string_dna(detail, name, type, version))
                 msg_data = {
                     'domain_name': domain_name,
                     'library_name': fingerprint.name,
@@ -147,10 +129,11 @@ class WhatWebAgent(agent.Agent):
             self.emit(selector=self._selector, data=msg_data)
         else:
             fingerprint = whatweb_definitions.Fingerprint(type=type, name=name,
-                                           version=str(versions),
-                                           detail=detail,
-                                           detail_format='markdown',
-                                           dna=self._compute_string_dna(detail, name, type, versions))
+                                                          version=str(
+                                                              versions),
+                                                          detail=detail,
+                                                          detail_format='markdown',
+                                                          dna=self._compute_string_dna(detail, name, type, versions))
             msg_data = {
                 'domain_name': domain_name,
                 'library_name': fingerprint.name,
@@ -160,31 +143,6 @@ class WhatWebAgent(agent.Agent):
 
             self._add_fingerprint(fingerprint)
             self.emit(selector=self._selector, data=msg_data)
-
-    def _send_detected_fingerprints_without_version(self, domain_name, name, detail):
-        """Emits the identified fingerprints without the version(s).
-
-        Args:
-            domain_name: The domain name.
-            name: The name of the website.
-            detail: Fingerprint detail.
-        """
-        type = FINGERPRINT_TYPE[name.lower()] if name.lower(
-        ) in FINGERPRINT_TYPE else whatweb_definitions.FingerprintType.BACKEND_COMPONENT
-        fingerprint = whatweb_definitions.Fingerprint(type=type, name=name,
-                                       version=None,
-                                       detail=detail,
-                                       detail_format='markdown',
-                                       dna=self._compute_string_dna(detail, name, type))
-        msg_data = {
-            'domain_name': domain_name,
-            'library_name': fingerprint.name,
-            'library_version': None,
-            'library_type': fingerprint.type.name
-        }
-
-        self._add_fingerprint(fingerprint)
-        self.emit(selector=self._selector, data=msg_data)
 
     def _add_fingerprint(self, fingerprint: whatweb_definitions.Fingerprint):
         """Add a fingerprint to the queue.
@@ -206,15 +164,11 @@ class WhatWebAgent(agent.Agent):
            returns:
             - Scan results from whatweb.
         """
-        self._start_scan(target, self._output_file)
-        findings = self._parse_result(self._output_file, target)
+        with tempfile.TemporaryFile() as fp:
+            self._start_scan(target, fp.name)
+            fp.seek(0)
+            findings = self._parse_result(target, fp)
         return findings
-
-    @staticmethod
-    def selector(*tags):
-        # v3 to differentiate agents using the new api from agents using the old api.
-        # v3.a.b.c.# will search for all message with a routing key that starts with a.b.c
-        return '.'.join(['v3', *tags, '#'])
 
     def _compute_string_dna(self, detail, plugin, type, version=None):
         """Computes the DNA of the fingerprint
