@@ -1,3 +1,5 @@
+"""Data types used by the whatweb agent."""
+
 import enum
 from typing import Optional
 from dataclasses import dataclass
@@ -5,10 +7,11 @@ from dataclasses import dataclass
 @dataclass
 class Target:
     """Data Class for whatweb target."""
-    address: str
+    domain_name: str
 
 
 class FingerprintType(enum.Enum):
+    """Class for types of fingerprints identified by whatweb agent."""
     PROGRAMMING_LANGUAGE = 1
     JAVA_LIBRARY = 2
     ELF_LIBRARY = 3
@@ -24,6 +27,7 @@ class FingerprintType(enum.Enum):
 
 @dataclass
 class Fingerprint:
+    """Data Class for a fingerprint identified by whatweb."""
     type: FingerprintType
     name: str
     version: Optional[str]

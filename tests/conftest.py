@@ -1,10 +1,31 @@
-"""
-    Dummy conftest.py for template_agent.
+"""Pytest fixture for the whatweb agent."""
+import pytest
 
-    If you don't know what this is for, just leave it empty.
-    Read more about conftest.py under:
-    - https://docs.pytest.org/en/stable/fixture.html
-    - https://docs.pytest.org/en/stable/writing_plugins.html
-"""
+from ostorlab.agent import definitions as agent_definitions
+from ostorlab.runtimes import definitions as runtime_definitions
+from agent import whatweb
 
-# import pytest
+
+@pytest.fixture
+def whatweb_test_agent():
+    """Creates a dummy agent for the WhatWeb Agent.
+    """
+    max_size = {
+        'name': 'fingerprints_queue_max_size',
+        'type': 'number',
+        'value': 2
+    }
+    reference_scan_id = {
+        'name': 'reference_scan_id',
+        'type': 'number',
+        'value': 1
+    }
+
+    agent_definition = agent_definitions.AgentDefinition(
+        name='whatweb',
+        args=[max_size, reference_scan_id]
+    )
+    agent_settings = runtime_definitions.AgentSettings(
+        key='whatweb'
+    )
+    return whatweb.WhatWebAgent(agent_definition, agent_settings)
