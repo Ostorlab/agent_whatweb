@@ -1,4 +1,4 @@
-"""WhatWeb Agent : Agent responsible for finger-printing a website."""
+"""WhatWeb Agent: Agent responsible for finger-printing a website."""
 import logging
 import json
 import subprocess
