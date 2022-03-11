@@ -34,6 +34,7 @@ FINGERPRINT_TYPE = {
 WHATWEB_PATH = './whatweb'
 WHATWEB_DIRECTORY = '/WhatWeb'
 
+
 class WhatWebAgent(agent.Agent):
     """Agent responsible for finger-printing a website."""
 
@@ -56,8 +57,9 @@ class WhatWebAgent(agent.Agent):
                            f'--log-json-verbose={output_file}',
                            target.domain_name
                            ]
-        subprocess.Popen(whatweb_command, stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE, cwd=WHATWEB_DIRECTORY)
+        with subprocess.Popen(whatweb_command, stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE, cwd=WHATWEB_DIRECTORY) as proc:
+            proc.communicate()[0]
 
     def _parse_result(self, target: whatweb_definitions.Target, output_file: Union[str, bytes, os.PathLike]):
         """After the scan is done, parse the output json file into a dict of the scan findings."""
@@ -82,12 +84,13 @@ class WhatWebAgent(agent.Agent):
                                         versions = value['version']
                                     if 'string' in value:
                                         name = str(value['string'])
-                                self._send_detected_fingerprints(target.domain_name, name, versions)
+                                self._send_detected_fingerprints(
+                                    target.domain_name, name, versions)
                 logger.info(
                     'Scan is done Parsing the results from %s.', output_file.name)
-        except Exception as e:
+        except OSError as e:
             logger.error(
-                f'Exception while processing {output_file} with message {e}')
+                f'Exception while processing %s with message %s', output_file, e)
 
     def _send_detected_fingerprints(self, domain_name: str, name: str, versions: Union[list, str]):
         """Emits the identified fingerprints.
@@ -98,7 +101,7 @@ class WhatWebAgent(agent.Agent):
             versions: The versions identified by WhatWeb Agent
         """
 
-        type = FINGERPRINT_TYPE[name.lower()] if name.lower(
+        fingerprint_type = FINGERPRINT_TYPE[name.lower()] if name.lower(
         ) in FINGERPRINT_TYPE else whatweb_definitions.FingerprintType.BACKEND_COMPONENT
         if isinstance(versions, list):
             for version in versions:
@@ -106,7 +109,7 @@ class WhatWebAgent(agent.Agent):
                     'domain_name': domain_name,
                     'library_name': name,
                     'library_version': str(version),
-                    'library_type': type.name
+                    'library_type': fingerprint_type.name
                 }
             self.emit(selector=self._selector, data=msg_data)
         else:
@@ -114,7 +117,7 @@ class WhatWebAgent(agent.Agent):
                 'domain_name': domain_name,
                 'library_name': name,
                 'library_version': str(version),
-                'library_type': type.name
+                'library_type': fingerprint_type.name
             }
             self.emit(selector=self._selector, data=msg_data)
 
@@ -127,8 +130,7 @@ class WhatWebAgent(agent.Agent):
         with tempfile.TemporaryFile() as fp:
             self._start_scan(target, fp.name)
             fp.seek(0)
-            findings = self._parse_result(target, fp)
-        return findings
+            self._parse_result(target, fp)
 
     def process(self, message: msg.Message) -> None:
         """Starts a whatweb scan, wait for the scan to finish,
@@ -138,8 +140,10 @@ class WhatWebAgent(agent.Agent):
             message:  The message to process from ostorlab runtime.
         """
         logger.info('processing message of selector : %s', message.selector)
-        target = whatweb_definitions.Target(domain_name=message.data['domain_name'])
+        target = whatweb_definitions.Target(
+            domain_name=message.data['domain_name'])
         self._scan(target=target)
+
 
 if __name__ == '__main__':
     logger.info('WhatWeb agent starting ...')
