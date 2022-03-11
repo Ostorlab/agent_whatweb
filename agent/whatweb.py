@@ -9,8 +9,6 @@ from rich import logging as rich_logging
 
 from ostorlab.agent import agent
 from ostorlab.agent import message as msg
-from ostorlab.agent import definitions as agent_definitions
-from ostorlab.runtimes import definitions as runtime_definitions
 
 from agent import definitions as whatweb_definitions
 
