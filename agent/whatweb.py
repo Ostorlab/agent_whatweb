@@ -57,9 +57,9 @@ class WhatWebAgent(agent.Agent):
                            f'--log-json-verbose={output_file}',
                            target.domain_name
                            ]
-        with subprocess.Popen(whatweb_command, stdout=subprocess.PIPE,
-                              stderr=subprocess.PIPE, cwd=WHATWEB_DIRECTORY) as proc:
-            proc.communicate()[0]
+        subprocess.Popen(whatweb_command, stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE, cwd=WHATWEB_DIRECTORY)
+
 
     def _parse_result(self, target: whatweb_definitions.Target, output_file: Union[str, bytes, os.PathLike]):
         """After the scan is done, parse the output json file into a dict of the scan findings."""
@@ -116,7 +116,7 @@ class WhatWebAgent(agent.Agent):
             msg_data = {
                 'domain_name': domain_name,
                 'library_name': name,
-                'library_version': str(version),
+                'library_version': str(versions),
                 'library_type': fingerprint_type.name
             }
             self.emit(selector=self._selector, data=msg_data)
