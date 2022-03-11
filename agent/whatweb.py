@@ -40,6 +40,19 @@ SELECTOR = 'v3.fingerprint.domain_name.library'
 class WhatWebAgent(agent.Agent):
     """Agent responsible for finger-printing a website."""
 
+    def process(self, message: msg.Message) -> None:
+        """Starts a whatweb scan, wait for the scan to finish,
+        and emit the results.
+
+        Args:
+            message:  The message to process from ostorlab runtime.
+        """
+        logger.info('processing message of selector : %s', message.selector)
+        with tempfile.TemporaryFile() as fp:
+            self._start_scan(message.data['name'], fp.name)
+            fp.seek(0)
+            self._parse_emit_result(message.data['name'], fp)
+
     def _start_scan(self, domain_name: str, output_file: Union[str, bytes, os.PathLike]):
         """Run a whatweb scan using python subprocess.
 
@@ -51,7 +64,7 @@ class WhatWebAgent(agent.Agent):
         whatweb_command = [WHATWEB_PATH, f'--log-json-verbose={output_file}', domain_name]
         subprocess.run(whatweb_command, cwd=WHATWEB_DIRECTORY, check=True)
 
-    def _parse_result(self, domain_name: str, output_file: io.BytesIO):
+    def _parse_emit_result(self, domain_name: str, output_file: io.BytesIO):
         """After the scan is done, parse the output json file into a dict of the scan findings."""
         try:
             # whatweb writes duplicate lines in some cases, breaking json. We process only the first line.
@@ -68,11 +81,14 @@ class WhatWebAgent(agent.Agent):
                                     plugin = list_plugin
                                 if plugin not in BLACKLISTED_PLUGINS:
                                     values = list_plugin[1]
-                                    versions = ''
+                                    versions = []
                                     name = plugin
                                     for value in values:
                                         if 'version' in value:
-                                            versions = value['version']
+                                            if isinstance(value['version'], list):
+                                                versions.extend(value['version'])
+                                            else:
+                                                versions.append(value['version'])
                                         if 'string' in value:
                                             name = str(value['string'])
                                     self._send_detected_fingerprints(domain_name, name, versions)
@@ -80,7 +96,7 @@ class WhatWebAgent(agent.Agent):
         except OSError as e:
             logger.error('Exception while processing %s with message %s', output_file, e)
 
-    def _send_detected_fingerprints(self, domain_name: str, name: str, versions: Union[list, str]):
+    def _send_detected_fingerprints(self, domain_name: str, name: str, versions: list):
         """Emits the identified fingerprints.
 
         Args:
@@ -90,7 +106,7 @@ class WhatWebAgent(agent.Agent):
         """
 
         fingerprint_type = FINGERPRINT_TYPE[name.lower()] if name.lower() in FINGERPRINT_TYPE else DEFAULT_FINGERPRINT
-        if isinstance(versions, list):
+        if len(versions) > 0:
             for version in versions:
                 msg_data = {
                     'domain_name': domain_name,
@@ -103,31 +119,10 @@ class WhatWebAgent(agent.Agent):
             msg_data = {
                 'domain_name': domain_name,
                 'library_name': name,
-                'library_version': str(versions),
+                'library_version': '',
                 'library_type': fingerprint_type
             }
             self.emit(selector=SELECTOR, data=msg_data)
-
-    def _scan(self, domain_name: str):
-        """Start a scan, wait for the scan results and clean the scan output.
-
-           returns:
-            - Scan results from whatweb.
-        """
-        with tempfile.TemporaryFile() as fp:
-            self._start_scan(domain_name, fp.name)
-            fp.seek(0)
-            self._parse_result(domain_name, fp)
-
-    def process(self, message: msg.Message) -> None:
-        """Starts a whatweb scan, wait for the scan to finish,
-        and emit the results.
-
-        Args:
-            message:  The message to process from ostorlab runtime.
-        """
-        logger.info('processing message of selector : %s', message.selector)
-        self._scan(domain_name=message.data['name'])
 
 
 if __name__ == '__main__':
