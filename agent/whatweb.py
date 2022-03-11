@@ -3,6 +3,7 @@ import logging
 import json
 import subprocess
 import tempfile
+import os
 from typing import Union
 from rich import logging as rich_logging
 
@@ -42,12 +43,12 @@ class WhatWebAgent(agent.Agent):
         super().__init__(agent_definition, agent_settings)
         self._selector = 'v3.fingerprint.domain_name.library'
 
-    def _start_scan(self, target, output_file: str):
+    def _start_scan(self, target: whatweb_definitions.Target, output_file: Union[str, bytes, os.PathLike]):
         """Run a whatweb scan using python subprocess.
 
         Args:
             target:  Target
-            output_file: name of the output.
+            output_file: The output file to save the scan result.
         """
         logger.info('Staring a new scan for %s .', target.domain_name)
 
@@ -58,15 +59,13 @@ class WhatWebAgent(agent.Agent):
         subprocess.Popen(whatweb_command, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE, cwd=WHATWEB_DIRECTORY)
 
-    def _parse_result(self, target: whatweb_definitions.Target, output_file):
+    def _parse_result(self, target: whatweb_definitions.Target, output_file: Union[str, bytes, os.PathLike]):
         """After the scan is done, parse the output json file into a dict of the scan findings."""
-        print('AAA')
         try:
             # whatweb writes duplicate lines in some cases, breaking json. We process only the first line.
             file_content = output_file.readlines()
             if file_content is not None and len(file_content) > 0:
                 results = json.loads(file_content[0])
-                print('Res ', results)
                 for result in results:
                     if isinstance(result, list):
                         for list_plugin in result:
@@ -76,12 +75,9 @@ class WhatWebAgent(agent.Agent):
                                 plugin = list_plugin
                             if plugin not in BLACKLISTED_PLUGINS:
                                 values = list_plugin[1]
-                                detail = f"Found `{plugin}` in `{target.domain_name}`"
                                 versions = ''
                                 name = plugin
                                 for value in values:
-                                    if 'regexp' in value:
-                                        detail = f"Found `{plugin}` in `{target.domain_name}`: `{value['regexp']}`"
                                     if 'version' in value:
                                         versions = value['version']
                                     if 'string' in value:

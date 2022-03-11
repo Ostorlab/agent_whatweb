@@ -2,7 +2,8 @@ kind: Agent
 name: whatweb
 version: 0.0.1
 description: whatweb is a web technology fingerprinter capable of detecting CMS, blogging platform, analytics packages, JS libraries, web server and embedded devices.
-in_selectors: [ ]
+in_selectors:
+ - v3.fingerprint.domain_name.library
 out_selectors: [ ]
 docker_file_path: Dockerfile
 docker_build_root: .
