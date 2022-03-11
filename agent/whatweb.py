@@ -26,8 +26,11 @@ BLACKLISTED_PLUGINS = ['X-Frame-Options', 'RedirectLocation',
                        'X-XSS-Protection', 'x-pingback', 'Strict-Transport-Security',
                        'UncommonHeaders', 'HTML5', 'Script', 'Title', 'Email', 'Meta-Author',
                        'Frame', 'PasswordField', 'MetaGenerator', 'Object', 'Country', 'IP']
+
+DEFAULT_FINGERPRINT = 'BACKEND_COMPONENT'
+
 FINGERPRINT_TYPE = {
-    'jquery': whatweb_definitions.FingerprintType.JAVASCRIPT_LIBRARY
+    'jquery': 'JAVASCRIPT_LIBRARY'
 }
 
 WHATWEB_PATH = './whatweb'
@@ -87,15 +90,14 @@ class WhatWebAgent(agent.Agent):
             versions: The versions identified by WhatWeb Agent
         """
 
-        fingerprint_type = FINGERPRINT_TYPE[name.lower()] if name.lower(
-        ) in FINGERPRINT_TYPE else whatweb_definitions.FingerprintType.BACKEND_COMPONENT
+        fingerprint_type = FINGERPRINT_TYPE[name.lower()] if name.lower() in FINGERPRINT_TYPE else DEFAULT_FINGERPRINT
         if isinstance(versions, list):
             for version in versions:
                 msg_data = {
                     'domain_name': domain_name,
                     'library_name': name,
                     'library_version': str(version),
-                    'library_type': fingerprint_type.name
+                    'library_type': fingerprint_type
                 }
             self.emit(selector=SELECTOR, data=msg_data)
         else:
@@ -103,7 +105,7 @@ class WhatWebAgent(agent.Agent):
                 'domain_name': domain_name,
                 'library_name': name,
                 'library_version': str(versions),
-                'library_type': fingerprint_type.name
+                'library_type': fingerprint_type
             }
             self.emit(selector=SELECTOR, data=msg_data)
 
