@@ -11,21 +11,24 @@ OUTPUT = '''["http://10fastfingers.com",301,[["IP",[{"string":"104.26.4.9","cert
 def testWhatWebAgent_allChecks_emitsFingerprints(whatweb_test_agent, mocker):
     """Test the whatweb agent with a given target address"""
 
-    selector = 'v3.fingerprint.domain_name.library'
-    msg_data = {
+    input_selector = 'v3.asset.domain_name'
+    input_data = {'name': 'ostorlab.co',}
+
+    output_selector = 'v3.fingerprint.domain_name.library'
+    output_data = {
         'domain_name': 'ostorlab.co',
         'library_name': 'UNITED STATES',
         'library_version': '',
         'library_type': 'BACKEND_COMPONENT'
     }
 
-    message = msg.Message.from_data(selector=selector, data=msg_data)
-    mocker.patch('subprocess.Popen', return_value=None)
+    message = msg.Message.from_data(selector=input_selector, data=input_data)
+    mocker.patch('subprocess.run', return_value=None)
     mock_emit = mocker.patch('agent.whatweb.WhatWebAgent.emit', return_value=None)
     with tempfile.TemporaryFile() as fp:
         mocker.patch('tempfile.TemporaryFile', return_value=fp)
         fp.write(OUTPUT.encode())
         fp.seek(0)
         whatweb_test_agent.process(message)
-        mock_emit.assert_called_with(selector=selector, data=msg_data)
+        mock_emit.assert_called_with(selector=output_selector, data=output_data)
 
