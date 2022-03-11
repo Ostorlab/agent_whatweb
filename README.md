@@ -7,7 +7,7 @@
 <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg">
 </p>
 
-_Whatweb is a web technology fingerprinter capable of detecting CMS, blogging platform, analytics pacakges, JS libraries, web servier and embeded devices.._
+_Whatweb is a web technology fingerprinter capable of detecting CMS, blogging platform, analytics pacakges, JS libraries, web servier and embeded devices._
 
 ---
 
@@ -20,10 +20,10 @@ This repository is an implementation of [Ostorlab Agent](https://pypi.org/projec
 ## Getting Started
 To perform your first scan, simply run the following command.
 ```shell
-ostorlab scan run --install --agent agent/ostorlab/whatweb ip 8.8.8.8
+ostorlab scan run --install --agent agent/ostorlab/whatweb domain-name tesla.com
 ```
 
-This command will download and install `agent/ostorlab/whatweb` and target the ip `8.8.8.8`.
+This command will download and install `agent/ostorlab/whatweb`.
 For more information, please refer to the [Ostorlab Documentation](https://github.com/Ostorlab/ostorlab/blob/main/README.md)
 
 
@@ -39,10 +39,8 @@ Agent Whatweb can be installed directly from the ostorlab agent store or built f
 
 You can then run the agent with the following command:
 
-// TODO: this is not the correct asset.
-
 ```shell
-ostorlab scan run --agent agent/ostorlab/whatweb ip 8.8.8.8
+ostorlab scan run --agent agent/ostorlab/whatweb domain-name tesla.com
 ```
 
 
@@ -67,16 +65,14 @@ git clone https://github.com/Ostorlab/agent_whatweb.git && cd agent_whatweb
  ```
  You can pass the optional flag `--organization` to specify your organisation. The organization is empty by default.
 
-// TODO: this is not the correct asset.
-
- 4. Run the agent using on of the following commands:
+ 1. Run the agent using on of the following commands:
 	 * If you did not specify an organization when building the image:
 	  ```shell
-	  ostorlab scan run --agent agent//whatweb ip 8.8.8.8
+	  ostorlab scan run --agent agent//whatweb domain-name tesla.com
 	  ```
 	 * If you specified an organization when building the image:
 	  ```shell
-	  ostorlab scan run --agent agent/[ORGANIZATION]/whatweb ip 8.8.8.8
+	  ostorlab scan run --agent agent/[ORGANIZATION]/whatweb domain-name tesla.com
 	  ```
 
 
