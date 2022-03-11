@@ -11,7 +11,6 @@ import io
 from ostorlab.agent import agent
 from ostorlab.agent import message as msg
 
-from agent import definitions as whatweb_definitions
 
 logging.basicConfig(
     format='%(message)s',
@@ -41,18 +40,18 @@ SELECTOR = 'v3.fingerprint.domain_name.library'
 class WhatWebAgent(agent.Agent):
     """Agent responsible for finger-printing a website."""
 
-    def _start_scan(self, target: whatweb_definitions.Target, output_file: Union[str, bytes, os.PathLike]):
+    def _start_scan(self, domain_name: str, output_file: Union[str, bytes, os.PathLike]):
         """Run a whatweb scan using python subprocess.
 
         Args:
             target:  Target
             output_file: The output file to save the scan result.
         """
-        logger.info('Staring a new scan for %s .', target.domain_name)
-        whatweb_command = [WHATWEB_PATH, f'--log-json-verbose={output_file}', target.domain_name]
+        logger.info('Staring a new scan for %s .', domain_name)
+        whatweb_command = [WHATWEB_PATH, f'--log-json-verbose={output_file}', domain_name]
         subprocess.run(whatweb_command, cwd=WHATWEB_DIRECTORY, check=True)
 
-    def _parse_result(self, target: whatweb_definitions.Target, output_file: io.BytesIO):
+    def _parse_result(self, domain_name: str, output_file: io.BytesIO):
         """After the scan is done, parse the output json file into a dict of the scan findings."""
         try:
             # whatweb writes duplicate lines in some cases, breaking json. We process only the first line.
@@ -76,7 +75,7 @@ class WhatWebAgent(agent.Agent):
                                             versions = value['version']
                                         if 'string' in value:
                                             name = str(value['string'])
-                                    self._send_detected_fingerprints(target.domain_name, name, versions)
+                                    self._send_detected_fingerprints(domain_name, name, versions)
                 logger.info('Scan is done Parsing the results from %s.', output_file.name)
         except OSError as e:
             logger.error('Exception while processing %s with message %s', output_file, e)
@@ -109,16 +108,16 @@ class WhatWebAgent(agent.Agent):
             }
             self.emit(selector=SELECTOR, data=msg_data)
 
-    def _scan(self, target: whatweb_definitions.Target):
+    def _scan(self, domain_name: str):
         """Start a scan, wait for the scan results and clean the scan output.
 
            returns:
             - Scan results from whatweb.
         """
         with tempfile.TemporaryFile() as fp:
-            self._start_scan(target, fp.name)
+            self._start_scan(domain_name, fp.name)
             fp.seek(0)
-            self._parse_result(target, fp)
+            self._parse_result(domain_name, fp)
 
     def process(self, message: msg.Message) -> None:
         """Starts a whatweb scan, wait for the scan to finish,
@@ -128,9 +127,7 @@ class WhatWebAgent(agent.Agent):
             message:  The message to process from ostorlab runtime.
         """
         logger.info('processing message of selector : %s', message.selector)
-        target = whatweb_definitions.Target(
-            domain_name=message.data['name'])
-        self._scan(target=target)
+        self._scan(domain_name=message.data['name'])
 
 
 if __name__ == '__main__':
