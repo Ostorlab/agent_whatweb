@@ -6,6 +6,7 @@ import tempfile
 import os
 from typing import Union
 from rich import logging as rich_logging
+import io
 
 from ostorlab.agent import agent
 from ostorlab.agent import message as msg
@@ -48,7 +49,7 @@ class WhatWebAgent(agent.Agent):
         whatweb_command = [WHATWEB_PATH, f'--log-json-verbose={output_file}', target.domain_name]
         subprocess.run(whatweb_command, cwd=WHATWEB_DIRECTORY, check=True)
 
-    def _parse_result(self, target: whatweb_definitions.Target, output_file: Union[str, bytes, os.PathLike]):
+    def _parse_result(self, target: whatweb_definitions.Target, output_file: io.BytesIO):
         """After the scan is done, parse the output json file into a dict of the scan findings."""
         try:
             # whatweb writes duplicate lines in some cases, breaking json. We process only the first line.
