@@ -5,8 +5,10 @@ import tempfile
 from ostorlab.agent import message as msg
 
 
-def testWhatWebAgent_allChecks_emitsFingerprints(whatweb_test_agent, mocker):
-    """Test the whatweb agent with a given target address"""
+def testWhatWebAgent_withAllChecksEnabled_emitsFingerprints(whatweb_test_agent, mocker):
+    """Test the whatweb agent with a given target address. The tests mocks the call to WhatWeb binary
+    and validates the parsing and sending the findings to the queue
+    """
 
     input_selector = 'v3.asset.domain_name'
     input_data = {'name': 'ostorlab.co',}
@@ -21,7 +23,7 @@ def testWhatWebAgent_allChecks_emitsFingerprints(whatweb_test_agent, mocker):
 
     message = msg.Message.from_data(selector=input_selector, data=input_data)
     mocker.patch('subprocess.run', return_value=None)
-    mock_emit = mocker.patch('agent.whatweb.WhatWebAgent.emit', return_value=None)
+    mock_emit = mocker.patch('agent.whatweb_agent.AgentWhatWeb.emit', return_value=None)
     with tempfile.TemporaryFile() as fp:
         mocker.patch('tempfile.TemporaryFile', return_value=fp)
         with open('tests/output.json', 'rb') as op:

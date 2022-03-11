@@ -3,7 +3,7 @@ import pytest
 
 from ostorlab.agent import definitions as agent_definitions
 from ostorlab.runtimes import definitions as runtime_definitions
-from agent import whatweb
+from agent import whatweb_agent
 
 
 @pytest.fixture
@@ -12,4 +12,4 @@ def whatweb_test_agent():
     """
     agent_definition = agent_definitions.AgentDefinition(name='whatweb')
     agent_settings = runtime_definitions.AgentSettings(key='whatweb')
-    return whatweb.WhatWebAgent(agent_definition, agent_settings)
+    return whatweb_agent.AgentWhatWeb(agent_definition, agent_settings)

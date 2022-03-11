@@ -3,10 +3,9 @@ import logging
 import json
 import subprocess
 import tempfile
-import os
-from typing import Union
-from rich import logging as rich_logging
 import io
+
+from rich import logging as rich_logging
 
 from ostorlab.agent import agent
 from ostorlab.agent import message as msg
@@ -15,7 +14,9 @@ from ostorlab.agent import message as msg
 logging.basicConfig(
     format='%(message)s',
     datefmt='[%X]',
-    handlers=[rich_logging.RichHandler(rich_tracebacks=True)]
+    handlers=[rich_logging.RichHandler(rich_tracebacks=True),],
+    level='INFO',
+    force=True
 )
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,7 @@ WHATWEB_DIRECTORY = '/WhatWeb'
 SELECTOR = 'v3.fingerprint.domain_name.library'
 
 
-class WhatWebAgent(agent.Agent):
+class AgentWhatWeb(agent.Agent):
     """Agent responsible for finger-printing a website."""
 
     def process(self, message: msg.Message) -> None:
@@ -53,7 +54,7 @@ class WhatWebAgent(agent.Agent):
             fp.seek(0)
             self._parse_emit_result(message.data['name'], fp)
 
-    def _start_scan(self, domain_name: str, output_file: Union[str, bytes, os.PathLike]):
+    def _start_scan(self, domain_name: str, output_file: io.BytesIO):
         """Run a whatweb scan using python subprocess.
 
         Args:
@@ -127,4 +128,4 @@ class WhatWebAgent(agent.Agent):
 
 if __name__ == '__main__':
     logger.info('WhatWeb agent starting ...')
-    WhatWebAgent.main()
+    AgentWhatWeb.main()
