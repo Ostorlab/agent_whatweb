@@ -33,6 +33,7 @@ WHATWEB_PATH = './whatweb'
 WHATWEB_DIRECTORY = '/WhatWeb'
 SELECTOR = 'v3.fingerprint.domain_name.library'
 
+
 class WhatWebAgent(agent.Agent):
     """Agent responsible for finger-printing a website."""
 
@@ -46,8 +47,6 @@ class WhatWebAgent(agent.Agent):
         logger.info('Staring a new scan for %s .', target.domain_name)
         whatweb_command = [WHATWEB_PATH, f'--log-json-verbose={output_file}', target.domain_name]
         subprocess.run(whatweb_command, cwd=WHATWEB_DIRECTORY, check=True)
-
-
 
     def _parse_result(self, target: whatweb_definitions.Target, output_file: Union[str, bytes, os.PathLike]):
         """After the scan is done, parse the output json file into a dict of the scan findings."""
@@ -73,8 +72,7 @@ class WhatWebAgent(agent.Agent):
                                             versions = value['version']
                                         if 'string' in value:
                                             name = str(value['string'])
-                                    self._send_detected_fingerprints(
-                                        target.domain_name, name, versions)
+                                    self._send_detected_fingerprints(target.domain_name, name, versions)
                 logger.info('Scan is done Parsing the results from %s.', output_file.name)
         except OSError as e:
             logger.error('Exception while processing %s with message %s', output_file, e)

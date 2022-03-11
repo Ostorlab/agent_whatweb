@@ -14,8 +14,8 @@ def testWhatWebAgent_allChecks_emitsFingerprints(whatweb_test_agent, mocker):
     output_selector = 'v3.fingerprint.domain_name.library'
     output_data = {
         'domain_name': 'ostorlab.co',
-        'library_name': 'UNITED STATES',
-        'library_version': '',
+        'library_name': 'Google-Analytics',
+        'library_version': 'Universal',
         'library_type': 'BACKEND_COMPONENT'
     }
 
