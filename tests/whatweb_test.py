@@ -23,7 +23,7 @@ def testWhatWebAgent_allChecks_emitsFingerprints(whatweb_test_agent, mocker):
     }
 
     message = msg.Message.from_data(selector=input_selector, data=input_data)
-    mocker.patch('subprocess.Popen', return_value=None)
+    mocker.patch('subprocess.run', return_value=None)
     mock_emit = mocker.patch('agent.whatweb.WhatWebAgent.emit', return_value=None)
     with tempfile.TemporaryFile() as fp:
         mocker.patch('tempfile.TemporaryFile', return_value=fp)

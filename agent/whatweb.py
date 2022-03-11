@@ -46,13 +46,9 @@ class WhatWebAgent(agent.Agent):
             output_file: The output file to save the scan result.
         """
         logger.info('Staring a new scan for %s .', target.domain_name)
+        whatweb_command = [WHATWEB_PATH, f'--log-json-verbose={output_file}', target.domain_name]
+        subprocess.run(whatweb_command, cwd=WHATWEB_DIRECTORY, check=True)
 
-        whatweb_command = [WHATWEB_PATH,
-                           f'--log-json-verbose={output_file}',
-                           target.domain_name
-                           ]
-        subprocess.Popen(whatweb_command, stdout=subprocess.PIPE,
-                              stderr=subprocess.PIPE, cwd=WHATWEB_DIRECTORY)
 
 
     def _parse_result(self, target: whatweb_definitions.Target, output_file: Union[str, bytes, os.PathLike]):
