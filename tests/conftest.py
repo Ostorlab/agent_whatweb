@@ -1,10 +1,15 @@
-"""
-    Dummy conftest.py for template_agent.
+"""Pytest fixture for the whatweb agent."""
+import pytest
 
-    If you don't know what this is for, just leave it empty.
-    Read more about conftest.py under:
-    - https://docs.pytest.org/en/stable/fixture.html
-    - https://docs.pytest.org/en/stable/writing_plugins.html
-"""
+from ostorlab.agent import definitions as agent_definitions
+from ostorlab.runtimes import definitions as runtime_definitions
+from agent import whatweb_agent
 
-# import pytest
+
+@pytest.fixture
+def whatweb_test_agent():
+    """Creates a dummy agent for the WhatWeb Agent.
+    """
+    agent_definition = agent_definitions.AgentDefinition(name='whatweb')
+    agent_settings = runtime_definitions.AgentSettings(key='whatweb')
+    return whatweb_agent.AgentWhatWeb(agent_definition, agent_settings)
