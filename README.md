@@ -7,7 +7,7 @@
 <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg">
 </p>
 
-_Whatweb is a web technology fingerprinter capable of detecting CMS, blogging platform, analytics pacakges, JS libraries, web servier and embeded devices.._
+_Whatweb is a web technology fingerprinter capable of detecting CMS, blogging platform, analytics pacakges, JS libraries, web servier and embeded devices._
 
 ---
 
