@@ -23,7 +23,7 @@ To perform your first scan, simply run the following command.
 ostorlab scan run --install --agent agent/ostorlab/whatweb domain-name tesla.com
 ```
 
-This command will download and install `agent/ostorlab/whatweb` and target the ip `8.8.8.8`.
+This command will download and install `agent/ostorlab/whatweb`.
 For more information, please refer to the [Ostorlab Documentation](https://github.com/Ostorlab/ostorlab/blob/main/README.md)
 
 
