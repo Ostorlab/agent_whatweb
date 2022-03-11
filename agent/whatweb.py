@@ -86,11 +86,9 @@ class WhatWebAgent(agent.Agent):
                                         name = str(value['string'])
                                 self._send_detected_fingerprints(
                                     target.domain_name, name, versions)
-                logger.info(
-                    'Scan is done Parsing the results from %s.', output_file.name)
+                logger.info('Scan is done Parsing the results from %s.', output_file.name)
         except OSError as e:
-            logger.error(
-                f'Exception while processing %s with message %s', output_file, e)
+            logger.error('Exception while processing %s with message %s', output_file, e)
 
     def _send_detected_fingerprints(self, domain_name: str, name: str, versions: Union[list, str]):
         """Emits the identified fingerprints.
