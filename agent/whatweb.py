@@ -24,7 +24,7 @@ BLACKLISTED_PLUGINS = ['X-Frame-Options', 'RedirectLocation',
                        'X-Forwarded-For', 'Via-Proxy', 'Allow', 'Strict-Transport-Security',
                        'X-XSS-Protection', 'x-pingback', 'Strict-Transport-Security',
                        'UncommonHeaders', 'HTML5', 'Script', 'Title', 'Email', 'Meta-Author',
-                       'Frame', 'PasswordField', 'MetaGenerator', 'Object']
+                       'Frame', 'PasswordField', 'MetaGenerator', 'Object', 'Country', 'IP']
 FINGERPRINT_TYPE = {
     'jquery': whatweb_definitions.FingerprintType.JAVASCRIPT_LIBRARY
 }
@@ -53,27 +53,28 @@ class WhatWebAgent(agent.Agent):
         """After the scan is done, parse the output json file into a dict of the scan findings."""
         try:
             # whatweb writes duplicate lines in some cases, breaking json. We process only the first line.
-            file_content = output_file.readlines()
-            if file_content is not None and len(file_content) > 0:
-                results = json.loads(file_content[0])
-                for result in results:
-                    if isinstance(result, list):
-                        for list_plugin in result:
-                            if len(list_plugin) > 0:
-                                plugin = list_plugin[0]
-                            else:
-                                plugin = list_plugin
-                            if plugin not in BLACKLISTED_PLUGINS:
-                                values = list_plugin[1]
-                                versions = ''
-                                name = plugin
-                                for value in values:
-                                    if 'version' in value:
-                                        versions = value['version']
-                                    if 'string' in value:
-                                        name = str(value['string'])
-                                self._send_detected_fingerprints(
-                                    target.domain_name, name, versions)
+            file_contents = output_file.readlines()
+            if file_contents is not None and len(file_contents) > 0:
+                for file_content in file_contents:
+                    results = json.loads(file_content)
+                    for result in results:
+                        if isinstance(result, list):
+                            for list_plugin in result:
+                                if len(list_plugin) > 0:
+                                    plugin = list_plugin[0]
+                                else:
+                                    plugin = list_plugin
+                                if plugin not in BLACKLISTED_PLUGINS:
+                                    values = list_plugin[1]
+                                    versions = ''
+                                    name = plugin
+                                    for value in values:
+                                        if 'version' in value:
+                                            versions = value['version']
+                                        if 'string' in value:
+                                            name = str(value['string'])
+                                    self._send_detected_fingerprints(
+                                        target.domain_name, name, versions)
                 logger.info('Scan is done Parsing the results from %s.', output_file.name)
         except OSError as e:
             logger.error('Exception while processing %s with message %s', output_file, e)
