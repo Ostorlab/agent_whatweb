@@ -33,16 +33,10 @@ FINGERPRINT_TYPE = {
 
 WHATWEB_PATH = './whatweb'
 WHATWEB_DIRECTORY = '/WhatWeb'
-
+SELECTOR = 'v3.fingerprint.domain_name.library'
 
 class WhatWebAgent(agent.Agent):
     """Agent responsible for finger-printing a website."""
-
-    def __init__(self, agent_definition: agent_definitions.AgentDefinition,
-                 agent_settings: runtime_definitions.AgentSettings) -> None:
-        """Inits the whatweb agent."""
-        super().__init__(agent_definition, agent_settings)
-        self._selector = 'v3.fingerprint.domain_name.library'
 
     def _start_scan(self, target: whatweb_definitions.Target, output_file: Union[str, bytes, os.PathLike]):
         """Run a whatweb scan using python subprocess.
@@ -109,7 +103,7 @@ class WhatWebAgent(agent.Agent):
                     'library_version': str(version),
                     'library_type': fingerprint_type.name
                 }
-            self.emit(selector=self._selector, data=msg_data)
+            self.emit(selector=SELECTOR, data=msg_data)
         else:
             msg_data = {
                 'domain_name': domain_name,
@@ -117,7 +111,7 @@ class WhatWebAgent(agent.Agent):
                 'library_version': str(versions),
                 'library_type': fingerprint_type.name
             }
-            self.emit(selector=self._selector, data=msg_data)
+            self.emit(selector=SELECTOR, data=msg_data)
 
     def _scan(self, target: whatweb_definitions.Target):
         """Start a scan, wait for the scan results and clean the scan output.
@@ -139,7 +133,7 @@ class WhatWebAgent(agent.Agent):
         """
         logger.info('processing message of selector : %s', message.selector)
         target = whatweb_definitions.Target(
-            domain_name=message.data['domain_name'])
+            domain_name=message.data['name'])
         self._scan(target=target)
 
 
