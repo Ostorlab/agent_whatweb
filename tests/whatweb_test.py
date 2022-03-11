@@ -24,7 +24,7 @@ def testWhatWebAgent_allChecks_emitsFingerprints(whatweb_test_agent, mocker):
     mock_emit = mocker.patch('agent.whatweb.WhatWebAgent.emit', return_value=None)
     with tempfile.TemporaryFile() as fp:
         mocker.patch('tempfile.TemporaryFile', return_value=fp)
-        with open('output.json', 'rb') as op:
+        with open('tests/output.json', 'rb') as op:
             fp.write(op.read())
             fp.seek(0)
             whatweb_test_agent.process(message)
