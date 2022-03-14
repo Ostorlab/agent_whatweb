@@ -73,5 +73,6 @@ in_selectors:
  - v3.asset.domain_name
 out_selectors:
  - v3.fingerprint.domain_name.library
+ - v3.report.vulnerability
 docker_file_path: Dockerfile
 docker_build_root: .
