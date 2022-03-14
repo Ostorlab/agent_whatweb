@@ -1,5 +1,5 @@
 """Unittests for whatweb agent."""
-
+import pathlib
 import tempfile
 
 from ostorlab.agent import message as msg
@@ -11,7 +11,7 @@ def testWhatWebAgent_withAllChecksEnabled_emitsFingerprints(whatweb_test_agent, 
     """
 
     input_selector = 'v3.asset.domain_name'
-    input_data = {'name': 'ostorlab.co',}
+    input_data = {'name': 'ostorlab.co'}
 
     output_selector = 'v3.fingerprint.domain_name.library'
     output_data = {
@@ -26,9 +26,9 @@ def testWhatWebAgent_withAllChecksEnabled_emitsFingerprints(whatweb_test_agent, 
     mock_emit = mocker.patch('agent.whatweb_agent.AgentWhatWeb.emit', return_value=None)
     with tempfile.TemporaryFile() as fp:
         mocker.patch('tempfile.NamedTemporaryFile', return_value=fp)
-        with open('tests/output.json', 'rb') as op:
+        with open(f'{pathlib.Path(__file__).parent}/output.json', 'rb') as op:
             fp.write(op.read())
             fp.seek(0)
             whatweb_test_agent.process(message)
-            mock_emit.assert_called_with(selector=output_selector, data=output_data)
+            mock_emit.assert_any_call(selector=output_selector, data=output_data)
 
