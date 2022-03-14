@@ -25,7 +25,7 @@ def testWhatWebAgent_withAllChecksEnabled_emitsFingerprints(whatweb_test_agent, 
     mocker.patch('subprocess.run', return_value=None)
     mock_emit = mocker.patch('agent.whatweb_agent.AgentWhatWeb.emit', return_value=None)
     with tempfile.TemporaryFile() as fp:
-        mocker.patch('tempfile.TemporaryFile', return_value=fp)
+        mocker.patch('tempfile.NamedTemporaryFile', return_value=fp)
         with open('tests/output.json', 'rb') as op:
             fp.write(op.read())
             fp.seek(0)
