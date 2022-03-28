@@ -1,6 +1,7 @@
 FROM python:3.8-alpine as base
 
 FROM base as builder
+RUN apk add build-base
 RUN mkdir /install
 WORKDIR /install
 COPY requirement.txt /requirement.txt

@@ -20,6 +20,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+VULNZ_TITLE = 'Web Tech Stack Fingerprint'
+VULNZ_ENTRY_RISK_RATING = 'INFO'
+VULNZ_SHORT_DESCRIPTION = 'List of web technologies recognized'
+VULNZ_DESCRIPTION = """Lists web technologies including content management systems(CMS), blogging platforms,
+statistic/analytics packages, JavaScript libraries, web servers, embedded devices, version numbers, email addresses,
+account IDs, web framework modules, SQL errors, and more."""
+
 # These are verbose non-preferred plugins.
 BLACKLISTED_PLUGINS = ['X-Frame-Options', 'RedirectLocation',
                        'Cookies', 'Access-Control-Allow-Methods', 'Content-Security-Policy',
@@ -126,8 +133,21 @@ class AgentWhatWeb(agent.Agent, agent_report_vulnerability_mixin.AgentReportVuln
                 }
                 self.emit(selector=LIB_SELECTOR, data=msg_data)
                 self.report_vulnerability(
-                    entry=kb.KB.WEB_GENERIC,
-                    technical_detail=f'```json\n{json.dumps(msg_data, indent=4, sort_keys=True)}\n```',
+                    entry=kb.Entry(
+                        title=VULNZ_TITLE,
+                        risk_rating=VULNZ_ENTRY_RISK_RATING,
+                        short_description=VULNZ_SHORT_DESCRIPTION,
+                        description=VULNZ_DESCRIPTION,
+                        references={},
+                        security_issue=True,
+                        privacy_issue=False,
+                        has_public_exploit=False,
+                        targeted_by_malware=False,
+                        targeted_by_ransomware=False,
+                        targeted_by_nation_state=False
+                    ),
+                    technical_detail=f'Found library `{library_name}`, version `{str(version)}`, '
+                    f'of type `{fingerprint_type}` in domain `{domain_name}`',
                     risk_rating=agent_report_vulnerability_mixin.RiskRating.INFO)
         else:
             # No version is found.
@@ -137,11 +157,23 @@ class AgentWhatWeb(agent.Agent, agent_report_vulnerability_mixin.AgentReportVuln
                 'library_version': '',
                 'library_type': fingerprint_type
             }
-            self.emit(
-                selector=LIB_SELECTOR, data=msg_data)
+            self.emit(selector=LIB_SELECTOR, data=msg_data)
             self.report_vulnerability(
-                entry=kb.KB.WEB_GENERIC,
-                technical_detail=f'```json\n{json.dumps(msg_data, indent=4, sort_keys=True)}\n```',
+                entry=kb.Entry(
+                    title=VULNZ_TITLE,
+                    risk_rating=VULNZ_ENTRY_RISK_RATING,
+                    short_description=VULNZ_SHORT_DESCRIPTION,
+                    description=VULNZ_DESCRIPTION,
+                    references={},
+                    security_issue=True,
+                    privacy_issue=False,
+                    has_public_exploit=False,
+                    targeted_by_malware=False,
+                    targeted_by_ransomware=False,
+                    targeted_by_nation_state=False
+                ),
+                technical_detail=f'Found library `{library_name}` of type '
+                f'`{fingerprint_type}` in domain `{domain_name}`',
                 risk_rating=agent_report_vulnerability_mixin.RiskRating.INFO)
 
 
