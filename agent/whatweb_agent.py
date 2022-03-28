@@ -23,9 +23,9 @@ logger = logging.getLogger(__name__)
 VULNZ_TITLE = 'Web Tech Stack Fingerprint'
 VULNZ_ENTRY_RISK_RATING = 'INFO'
 VULNZ_SHORT_DESCRIPTION = 'List of web technologies recognized'
-VULNZ_DESCRIPTION = '''Lists web technologies including content management systems(CMS), blogging platforms,
+VULNZ_DESCRIPTION = """Lists web technologies including content management systems(CMS), blogging platforms,
 statistic/analytics packages, JavaScript libraries, web servers, embedded devices, version numbers, email addresses,
-account IDs, web framework modules, SQL errors, and more.'''
+account IDs, web framework modules, SQL errors, and more."""
 
 # These are verbose non-preferred plugins.
 BLACKLISTED_PLUGINS = ['X-Frame-Options', 'RedirectLocation',
@@ -146,8 +146,8 @@ class AgentWhatWeb(agent.Agent, agent_report_vulnerability_mixin.AgentReportVuln
                         targeted_by_ransomware=False,
                         targeted_by_nation_state=False
                     ),
-                    technical_detail=f'Found library `{library_name}`, version `{str(version)}`, of type `{fingerprint_type}`'
-                    f' in domain `{domain_name}`',
+                    technical_detail=f'Found library `{library_name}`, version `{str(version)}`, '
+                    f'of type `{fingerprint_type}` in domain `{domain_name}`',
                     risk_rating=agent_report_vulnerability_mixin.RiskRating.INFO)
         else:
             # No version is found.
@@ -172,7 +172,8 @@ class AgentWhatWeb(agent.Agent, agent_report_vulnerability_mixin.AgentReportVuln
                     targeted_by_ransomware=False,
                     targeted_by_nation_state=False
                 ),
-                technical_detail=f'Found library `{library_name}` of type `{fingerprint_type}` in domain `{domain_name}`',
+                technical_detail=f'Found library `{library_name}` of type '
+                f'`{fingerprint_type}` in domain `{domain_name}`',
                 risk_rating=agent_report_vulnerability_mixin.RiskRating.INFO)
 
 
