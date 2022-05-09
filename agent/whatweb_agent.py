@@ -129,7 +129,9 @@ class AgentWhatWeb(agent.Agent, agent_report_vulnerability_mixin.AgentReportVuln
                     'domain_name': domain_name,
                     'library_name': library_name,
                     'library_version': str(version),
-                    'library_type': fingerprint_type
+                    'library_type': fingerprint_type,
+                    'detail': f'Found library `{library_name}`, version `{str(version)}`, '
+                    f'of type `{fingerprint_type}` in domain `{domain_name}`',
                 }
                 self.emit(selector=LIB_SELECTOR, data=msg_data)
                 self.report_vulnerability(
@@ -155,7 +157,9 @@ class AgentWhatWeb(agent.Agent, agent_report_vulnerability_mixin.AgentReportVuln
                 'domain_name': domain_name,
                 'library_name': library_name,
                 'library_version': '',
-                'library_type': fingerprint_type
+                'library_type': fingerprint_type,
+                'detail': f'Found library `{library_name}` of type '
+                f'`{fingerprint_type}` in domain `{domain_name}`'
             }
             self.emit(selector=LIB_SELECTOR, data=msg_data)
             self.report_vulnerability(
