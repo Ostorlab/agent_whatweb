@@ -12,13 +12,15 @@ def testWhatWebAgent_withAllChecksEnabled_emitsFingerprints(whatweb_test_agent, 
 
     input_selector = 'v3.asset.domain_name'
     input_data = {'name': 'ostorlab.co'}
-
+    detail = 'Found library `Google-Analytics`, version `Universal`, of type `BACKEND_COMPONENT` in domain ' \
+             '`ostorlab.co`'
     output_selector = 'v3.fingerprint.domain_name.library'
     output_data = {
         'domain_name': 'ostorlab.co',
         'library_name': 'Google-Analytics',
         'library_version': 'Universal',
-        'library_type': 'BACKEND_COMPONENT'
+        'library_type': 'BACKEND_COMPONENT',
+        'detail': detail
     }
 
     message = msg.Message.from_data(selector=input_selector, data=input_data)
@@ -31,4 +33,3 @@ def testWhatWebAgent_withAllChecksEnabled_emitsFingerprints(whatweb_test_agent, 
             fp.seek(0)
             whatweb_test_agent.process(message)
             mock_emit.assert_any_call(selector=output_selector, data=output_data)
-
