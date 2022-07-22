@@ -3,7 +3,8 @@ import pathlib
 import tempfile
 
 
-def testWhatWebAgent_withDomainMsgAndAllChecksEnabled_emitsFingerprints(agent_mock, whatweb_test_agent, domain_msg, mocker):
+def testWhatWebAgent_withDomainMsgAndAllChecksEnabled_emitsFingerprints(agent_mock, whatweb_test_agent,
+                                                                        domain_msg, mocker):
     """Test the whatweb agent with a given target address. The tests mocks the call to WhatWeb binary
     and validates the parsing and sending the findings to the queue.
     """
