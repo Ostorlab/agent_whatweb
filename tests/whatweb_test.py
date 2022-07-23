@@ -55,8 +55,8 @@ def testWhatWebAgent_withLinkMsgAndAllChecksEnabled_emitsFingerprints(agent_mock
             assert any(vuln_msg.data.get('security_issue') is True for vuln_msg in agent_mock)
 
 
-def testAgentWhatWeb_whenAssetAlreadyScaned_doNothing(domain_msg, whatweb_test_agent,
-                                                      agent_mock, fp, mocker):
+def testAgentWhatWeb_whenAssetAlreadyScaned_doNothing(agent_mock, whatweb_test_agent,
+                                                      domain_msg, mocker):
     """Ensure whatweb agent does not process the same message multiple times."""
     mocker.patch('subprocess.run', return_value=None)
     with tempfile.TemporaryFile() as fp:
