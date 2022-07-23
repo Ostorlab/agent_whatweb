@@ -12,6 +12,7 @@ from ostorlab.agent import agent
 from ostorlab.agent import message as msg
 from ostorlab.agent.kb import kb
 from ostorlab.agent.mixins import agent_report_vulnerability_mixin
+from ostorlab.agent.mixins import agent_persist_mixin as persist_mixin
 from rich import logging as rich_logging
 
 logging.basicConfig(
@@ -47,7 +48,7 @@ FINGERPRINT_TYPE = {
 WHATWEB_PATH = './whatweb'
 WHATWEB_DIRECTORY = '/WhatWeb'
 LIB_SELECTOR = 'v3.fingerprint.domain_name.service.library'
-SCHEME_TO_PORT = {'http': 80, 'https': 443, 'ftp': 21}
+SCHEME_TO_PORT = {'http': 80, 'https': 443}
 
 
 @dataclasses.dataclass
@@ -57,7 +58,9 @@ class Target:
     port: Optional[int] = None
 
 
-class AgentWhatWeb(agent.Agent, agent_report_vulnerability_mixin.AgentReportVulnMixin):
+class AgentWhatWeb(agent.Agent,
+                   agent_report_vulnerability_mixin.AgentReportVulnMixin,
+                   persist_mixin.AgentPersistMixin):
     """Agent responsible for finger-printing a website."""
 
     def process(self, message: msg.Message) -> None:
@@ -68,33 +71,38 @@ class AgentWhatWeb(agent.Agent, agent_report_vulnerability_mixin.AgentReportVuln
             message:  The message to process from ostorlab runtime.
         """
         logger.info('processing message of selector : %s', message.selector)
+        target = self._prepare_target(message)
+        if not self.set_add(b'agent_whatweb_asset', target.domain):
+            logger.info('target %s/ was processed before, exiting', target.domain)
+            return
+
         with tempfile.NamedTemporaryFile() as fp:
-            target = self._prepare_target(message)
             self._start_scan(target.domain, fp.name)
             self._parse_emit_result(target.domain, fp, int(target.port), target.schema)
 
     def _prepare_target(self, message: msg.Message) -> Target:
         """Returns a target object to be scanned."""
-        if message.selector.endswith('.link'):
-            domain_name = parse.urlparse(message.data['url']).netloc
-            schema, port = self._get_url_schema_port(message.data['url'])
-            target = Target(domain=domain_name, schema=schema, port=port)
-        elif message.selector.endswith('.domain_name'):
+        if message.data.get('url') is not None:
+            target = self._get_target_from_url(message.data['url'])
+        elif message.data.get('name') is not None:
             domain_name = message.data['name']
             target = Target(domain=domain_name, schema=self.args.get('schema'), port=self.args.get('port'))
         else:
             raise NotImplementedError(f'Message selector {message.selector} not supported.')
         return target
 
-    def _get_url_schema_port(self, url: str) -> tuple:
+    def _get_target_from_url(self, url: str) -> tuple:
         """Compute schema and port from an URL"""
         parsed_url = parse.urlparse(url)
         schema = parsed_url.scheme or self.args.get('schema')
+        domain_name = parse.urlparse(url).netloc
         port = 0
         if len(parsed_url.netloc.split(':')) > 1:
+            domain_name = parsed_url.netloc.split(':')[0]
             port = parsed_url.netloc.split(':')[-1]
         port = int(port) or SCHEME_TO_PORT.get(schema) or self.args.get('port')
-        return schema, port
+        target = Target(domain=domain_name, schema=schema, port=port)
+        return target
 
     def _start_scan(self, domain_name: str, output_file: str):
         """Run a whatweb scan using python subprocess.
