@@ -72,13 +72,13 @@ class AgentWhatWeb(agent.Agent,
         """
         logger.info('processing message of selector : %s', message.selector)
         target = self._prepare_target(message)
-        if not self.set_add(b'agent_whatweb_asset', target.domain):
-            logger.info('target %s/ was processed before, exiting', target.domain)
+        is_target_already_processed = self._is_target_already_processed(message)
+        if is_target_already_processed is False:
             return
-
-        with tempfile.NamedTemporaryFile() as fp:
-            self._start_scan(target.domain, fp.name)
-            self._parse_emit_result(target.domain, fp, int(target.port), target.schema)
+        else:
+            with tempfile.NamedTemporaryFile() as fp:
+                self._start_scan(target.domain, fp.name)
+                self._parse_emit_result(target.domain, fp, int(target.port), target.schema)
 
     def _prepare_target(self, message: msg.Message) -> Target:
         """Returns a target object to be scanned."""
@@ -89,7 +89,21 @@ class AgentWhatWeb(agent.Agent,
             target = Target(domain=domain_name, schema=self.args.get('schema'), port=self.args.get('port'))
         else:
             raise NotImplementedError(f'Message selector {message.selector} not supported.')
+
         return target
+
+    def _is_target_already_processed(self, message):
+        """Checks if the target has already been processed before, relies on the redis server."""
+        if message.data.get('url') is not None:
+            unicity_check_key = message.data['url']
+        elif message.data.get('name') is not None:
+            unicity_check_key = message.data['name']
+
+        if self.set_add(b'agent_whatweb_asset', unicity_check_key) is True:
+            return True
+        else:
+            logger.info('target %s/ was processed before, exiting', unicity_check_key)
+            return False
 
     def _get_target_from_url(self, url: str) -> tuple:
         """Compute schema and port from an URL"""
