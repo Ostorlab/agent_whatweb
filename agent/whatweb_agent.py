@@ -4,11 +4,15 @@ import json
 import logging
 import subprocess
 import tempfile
+from typing import List, Optional
+from urllib import parse
+import dataclasses
 
 from ostorlab.agent import agent
 from ostorlab.agent import message as msg
 from ostorlab.agent.kb import kb
 from ostorlab.agent.mixins import agent_report_vulnerability_mixin
+from ostorlab.agent.mixins import agent_persist_mixin as persist_mixin
 from rich import logging as rich_logging
 
 logging.basicConfig(
@@ -43,10 +47,20 @@ FINGERPRINT_TYPE = {
 
 WHATWEB_PATH = './whatweb'
 WHATWEB_DIRECTORY = '/WhatWeb'
-LIB_SELECTOR = 'v3.fingerprint.domain_name.library'
+LIB_SELECTOR = 'v3.fingerprint.domain_name.service.library'
+SCHEME_TO_PORT = {'http': 80, 'https': 443}
 
 
-class AgentWhatWeb(agent.Agent, agent_report_vulnerability_mixin.AgentReportVulnMixin):
+@dataclasses.dataclass
+class Target:
+    domain: str
+    schema: Optional[str] = None
+    port: Optional[int] = None
+
+
+class AgentWhatWeb(agent.Agent,
+                   agent_report_vulnerability_mixin.AgentReportVulnMixin,
+                   persist_mixin.AgentPersistMixin):
     """Agent responsible for finger-printing a website."""
 
     def process(self, message: msg.Message) -> None:
@@ -57,9 +71,52 @@ class AgentWhatWeb(agent.Agent, agent_report_vulnerability_mixin.AgentReportVuln
             message:  The message to process from ostorlab runtime.
         """
         logger.info('processing message of selector : %s', message.selector)
-        with tempfile.NamedTemporaryFile() as fp:
-            self._start_scan(message.data['name'], fp.name)
-            self._parse_emit_result(message.data['name'], fp)
+        target = self._prepare_target(message)
+        is_target_already_processed = self._is_target_already_processed(message)
+        if is_target_already_processed is False:
+            return
+        else:
+            with tempfile.NamedTemporaryFile() as fp:
+                self._start_scan(target.domain, fp.name)
+                self._parse_emit_result(target.domain, fp, int(target.port), target.schema)
+
+    def _prepare_target(self, message: msg.Message) -> Target:
+        """Returns a target object to be scanned."""
+        if message.data.get('url') is not None:
+            target = self._get_target_from_url(message.data['url'])
+        elif message.data.get('name') is not None:
+            domain_name = message.data['name']
+            target = Target(domain=domain_name, schema=self.args.get('schema'), port=self.args.get('port'))
+        else:
+            raise NotImplementedError(f'Message selector {message.selector} not supported.')
+
+        return target
+
+    def _is_target_already_processed(self, message):
+        """Checks if the target has already been processed before, relies on the redis server."""
+        if message.data.get('url') is not None:
+            unicity_check_key = message.data['url']
+        elif message.data.get('name') is not None:
+            unicity_check_key = message.data['name']
+
+        if self.set_add(b'agent_whatweb_asset', unicity_check_key) is True:
+            return True
+        else:
+            logger.info('target %s/ was processed before, exiting', unicity_check_key)
+            return False
+
+    def _get_target_from_url(self, url: str) -> tuple:
+        """Compute schema and port from an URL"""
+        parsed_url = parse.urlparse(url)
+        schema = parsed_url.scheme or self.args.get('schema')
+        domain_name = parse.urlparse(url).netloc
+        port = 0
+        if len(parsed_url.netloc.split(':')) > 1:
+            domain_name = parsed_url.netloc.split(':')[0]
+            port = parsed_url.netloc.split(':')[-1]
+        port = int(port) or SCHEME_TO_PORT.get(schema) or self.args.get('port')
+        target = Target(domain=domain_name, schema=schema, port=port)
+        return target
 
     def _start_scan(self, domain_name: str, output_file: str):
         """Run a whatweb scan using python subprocess.
@@ -72,7 +129,8 @@ class AgentWhatWeb(agent.Agent, agent_report_vulnerability_mixin.AgentReportVuln
         whatweb_command = [WHATWEB_PATH, f'--log-json-verbose={output_file}', domain_name]
         subprocess.run(whatweb_command, cwd=WHATWEB_DIRECTORY, check=True)
 
-    def _parse_emit_result(self, domain_name: str, output_file: io.BytesIO):
+    def _parse_emit_result(self, domain_name: str, output_file: io.BytesIO,
+                           port: Optional[int] = None, schema: Optional[str] = None):
         """After the scan is done, parse the output json file into a dict of the scan findings."""
         output_file.seek(0)
         try:
@@ -105,18 +163,21 @@ class AgentWhatWeb(agent.Agent, agent_report_vulnerability_mixin.AgentReportVuln
                                             versions.append(value['version'])
                                     if 'string' in value:
                                         library_name = str(value['string'])
-                                self._send_detected_fingerprints(domain_name, library_name, versions)
+                                self._send_detected_fingerprints(domain_name, port, schema, library_name, versions)
                     else:
                         logger.warning('found result non list %s', result)
                 logger.info('Scan is done Parsing the results from %s.', output_file.name)
         except OSError as e:
             logger.error('Exception while processing %s with message %s', output_file, e)
 
-    def _send_detected_fingerprints(self, domain_name: str, library_name: str, versions: list):
+    def _send_detected_fingerprints(self, domain_name: str, port: Optional[int] = None, schema: Optional[str] = None,
+                                    library_name: Optional[str] = None, versions: Optional[List] = None):
         """Emits the identified fingerprints.
 
         Args:
             domain_name: The domain name.
+            port: the port of the service where the fingerprint has been identified.
+            schema: sceham of the service where the fingerprint has been identified
             library_name: Library name.
             versions: The versions identified by WhatWeb scanner.
         """
@@ -125,14 +186,7 @@ class AgentWhatWeb(agent.Agent, agent_report_vulnerability_mixin.AgentReportVuln
             library_name.lower()] if library_name.lower() in FINGERPRINT_TYPE else DEFAULT_FINGERPRINT
         if len(versions) > 0:
             for version in versions:
-                msg_data = {
-                    'domain_name': domain_name,
-                    'library_name': library_name,
-                    'library_version': str(version),
-                    'library_type': fingerprint_type,
-                    'detail': f'Found library `{library_name}`, version `{str(version)}`, '
-                    f'of type `{fingerprint_type}` in domain `{domain_name}`',
-                }
+                msg_data = self._get_msg_data(domain_name, port, schema, library_name, version, fingerprint_type)
                 self.emit(selector=LIB_SELECTOR, data=msg_data)
                 self.report_vulnerability(
                     entry=kb.Entry(
@@ -153,14 +207,7 @@ class AgentWhatWeb(agent.Agent, agent_report_vulnerability_mixin.AgentReportVuln
                     risk_rating=agent_report_vulnerability_mixin.RiskRating.INFO)
         else:
             # No version is found.
-            msg_data = {
-                'domain_name': domain_name,
-                'library_name': library_name,
-                'library_version': '',
-                'library_type': fingerprint_type,
-                'detail': f'Found library `{library_name}` of type '
-                f'`{fingerprint_type}` in domain `{domain_name}`'
-            }
+            msg_data = self._get_msg_data(domain_name, port, schema, library_name, None, fingerprint_type)
             self.emit(selector=LIB_SELECTOR, data=msg_data)
             self.report_vulnerability(
                 entry=kb.Entry(
@@ -180,6 +227,31 @@ class AgentWhatWeb(agent.Agent, agent_report_vulnerability_mixin.AgentReportVuln
                 f'`{fingerprint_type}` in domain `{domain_name}`',
                 risk_rating=agent_report_vulnerability_mixin.RiskRating.INFO)
 
+    def _get_msg_data(self, domain_name, port: Optional[int] = None, schema: Optional[str] = None,
+                      library_name: Optional[str] = None, version: Optional[str] = None,
+                      fingerprint_type: Optional[str] = None):
+        """Prepare  data of the library proto message to be emited."""
+        msg_data = {}
+        if domain_name is not None:
+            msg_data['name'] = domain_name
+        if port is not None:
+            msg_data['port'] = port
+        if schema is not None:
+            msg_data['schema'] = schema
+        if library_name is not None:
+            msg_data['library_name'] = library_name
+        if fingerprint_type is not None:
+            msg_data['library_type'] = fingerprint_type
+        if version is not None:
+            msg_data['library_version'] = str(version)
+            detail = f'Found library `{library_name}`, version `{str(version)}`, of type'
+            detail = f'{detail} `{fingerprint_type}` in domain `{domain_name}`'
+            msg_data['detail'] = detail
+        else:
+            detail = f'Found library `{library_name}`, of type `{fingerprint_type}`'
+            detail = f'{detail} in domain `{domain_name}`'
+            msg_data['detail'] = detail
+        return msg_data
 
 if __name__ == '__main__':
     logger.info('WhatWeb agent starting ...')
