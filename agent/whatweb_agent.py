@@ -11,6 +11,8 @@ import dataclasses
 from ostorlab.agent import agent
 from ostorlab.agent import message as msg
 from ostorlab.agent.kb import kb
+from ostorlab.agent import definitions as agent_definitions
+from ostorlab.runtimes import definitions as runtime_definitions
 from ostorlab.agent.mixins import agent_report_vulnerability_mixin
 from ostorlab.agent.mixins import agent_persist_mixin as persist_mixin
 from rich import logging as rich_logging
@@ -62,6 +64,14 @@ class AgentWhatWeb(agent.Agent,
                    agent_report_vulnerability_mixin.AgentReportVulnMixin,
                    persist_mixin.AgentPersistMixin):
     """Agent responsible for finger-printing a website."""
+    def __init__(self,
+                agent_definition: agent_definitions.AgentDefinition,
+                agent_settings: runtime_definitions.AgentSettings) -> None:
+
+        agent.Agent.__init__(self, agent_definition, agent_settings)
+        agent_report_vulnerability_mixin.AgentReportVulnMixin.__init__(self)
+        persist_mixin.AgentPersistMixin.__init__(self, agent_settings)
+
 
     def process(self, message: msg.Message) -> None:
         """Starts a whatweb scan, wait for the scan to finish,
