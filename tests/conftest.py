@@ -21,10 +21,37 @@ def domain_msg():
 
 
 @pytest.fixture
+def domain_msg_with_port_and_schema():
+    """Creates a dummy message of type v3.asset.domain_name.service for testing purposes."""
+    input_selector = 'v3.asset.domain_name.service'
+    input_data = {'name': 'ostorlab.co', 'port': 80, 'schema': 'http'}
+    message = m.Message.from_data(selector=input_selector, data=input_data)
+    return message
+
+
+@pytest.fixture
 def link_msg():
     """Creates a dummy message of type v3.asset.link for testing purposes."""
     input_selector = 'v3.asset.link'
     input_data = {'url': 'http://ostorlab.co', 'method': 'GET'}
+    message = m.Message.from_data(selector=input_selector, data=input_data)
+    return message
+
+
+@pytest.fixture
+def ip_msg():
+    """Creates a dummy message of type v3.asset.ip for testing purposes."""
+    input_selector = 'v3.asset.ip'
+    input_data = {'host': '192.168.0.76'}
+    message = m.Message.from_data(selector=input_selector, data=input_data)
+    return message
+
+
+@pytest.fixture
+def ip_msg_with_port_and_schema():
+    """Creates a dummy message of type v3.asset.ip.v4.port.service for testing purposes."""
+    input_selector = 'v3.asset.ip.v4.port.service'
+    input_data = {'host': '192.168.0.0', 'port': 80, 'protocol': 'http'}
     message = m.Message.from_data(selector=input_selector, data=input_data)
     return message
 
