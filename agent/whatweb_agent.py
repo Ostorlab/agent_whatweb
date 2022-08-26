@@ -83,9 +83,7 @@ class AgentWhatWeb(agent.Agent,
         logger.info('processing message of selector : %s', message.selector)
         targets = self._prepare_targets(message)
         for target in targets:
-            is_target_already_processed = self._is_target_already_processed(
-                message)
-            if is_target_already_processed is False:
+            if self._is_target_already_processed(message) is False:
                 continue
             else:
                 with tempfile.NamedTemporaryFile() as fp:
@@ -111,10 +109,13 @@ class AgentWhatWeb(agent.Agent,
         elif message.data.get('name') is not None:
             domain_name = message.data['name']
 
+            # Read the port from the message if it exists, else read from the args.
             if message.data.get('port') is not None:
                 port = message.data['port']
             else:
                 port = self.args.get('port')
+
+            # Read the schema from the message if it exists, else read from the args.
             if message.data.get('schema') is not None:
                 schema = message.data['schema']
             else:
@@ -132,10 +133,14 @@ class AgentWhatWeb(agent.Agent,
 
         if host is None:
             return targets
+
+        # Read the port from the message if it exists, else read from the args.
         if message.data.get('port') is not None:
             port = message.data['port']
         else:
             port = self.args.get('port')
+
+        # Read the schema from the message if it exists, else read from the args.
         if message.data.get('protocol') is not None:
             schema = message.data['protocol']
         else:
@@ -158,7 +163,7 @@ class AgentWhatWeb(agent.Agent,
 
         return targets
 
-    def _is_target_already_processed(self, message):
+    def _is_target_already_processed(self, message) -> bool:
         """Checks if the target has already been processed before, relies on the redis server."""
         if message.data.get('url') is not None:
             unicity_check_key = message.data['url']
