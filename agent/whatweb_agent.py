@@ -160,11 +160,18 @@ class AgentWhatWeb(agent.Agent,
     def _is_target_already_processed(self, message) -> bool:
         """Checks if the target has already been processed before, relies on the redis server."""
         if message.data.get('url') is not None:
-            unicity_check_key = message.data['url']
+            target = self._get_target_from_url(message.data['url'])
+            unicity_check_key = f'{target.schema}_{target.name}_{target.port}'
         elif message.data.get('name') is not None:
-            unicity_check_key = message.data['name']
+            port = self._get_port(message)
+            schema = self._get_schema(message)
+            domain = message.data['name']
+            unicity_check_key = f'{schema}_{domain}_{port}'
         elif message.data.get('host') is not None:
-            unicity_check_key = message.data['host']
+            port = self._get_port(message)
+            schema = self._get_schema(message)
+            host = message.data['host']
+            unicity_check_key = f'{schema}_{host}_{port}'
 
         if self.set_add(b'agent_whatweb_asset', unicity_check_key) is True:
             return True

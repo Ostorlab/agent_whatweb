@@ -122,8 +122,6 @@ def testWhatWebAgent_whenIpMsgHasPortAndSchema_emitsFingerprints(agent_mock, wha
             fp.write(op.read())
             fp.seek(0)
             whatweb_test_agent.process(ip_msg_with_port_and_schema)
-            for vuln_msg in agent_mock:
-                print('Vulnz ', vuln_msg.data)
             assert len(agent_mock) > 0
             assert any(fingerprint_msg.data.get('port') == 80 for fingerprint_msg in agent_mock)
             assert any(fingerprint_msg.data.get('schema') == 'http' for fingerprint_msg in agent_mock)
