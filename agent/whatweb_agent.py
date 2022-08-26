@@ -100,6 +100,22 @@ class AgentWhatWeb(agent.Agent,
         targets.extend(ip_targets)
         return targets
 
+    def _get_port(self, message: msg.Message) -> int:
+        """Returns the port to be used for the target."""
+        if message.data.get('port') is not None:
+            return message.data['port']
+        else:
+            return self.args.get('port')
+
+    def _get_schema(self, message: msg.Message) -> str:
+        """Returns the schema to be used for the target."""
+        if message.data.get('schema') is not None:
+            return message.data['schema']
+        elif message.data.get('protocol') is not None:
+            return message.data['protocol']
+        else:
+            return self.args.get('schema')
+
     def _prepare_domain_targets(self, message: msg.Message) -> List[Target]:
         """Returns a list of domain targets to be scanned."""
         targets = []
@@ -108,19 +124,7 @@ class AgentWhatWeb(agent.Agent,
             targets.append(target)
         elif message.data.get('name') is not None:
             domain_name = message.data['name']
-
-            # Read the port from the message if it exists, else read from the args.
-            if message.data.get('port') is not None:
-                port = message.data['port']
-            else:
-                port = self.args.get('port')
-
-            # Read the schema from the message if it exists, else read from the args.
-            if message.data.get('schema') is not None:
-                schema = message.data['schema']
-            else:
-                schema = self.args.get('schema')
-            target = Target(name=domain_name, schema=schema, port=port)
+            target = Target(name=domain_name, schema=self._get_schema(message), port=self._get_port(message))
             targets.append(target)
 
         return targets
@@ -134,30 +138,20 @@ class AgentWhatWeb(agent.Agent,
         if host is None:
             return targets
 
-        # Read the port from the message if it exists, else read from the args.
-        if message.data.get('port') is not None:
-            port = message.data['port']
-        else:
-            port = self.args.get('port')
-
-        # Read the schema from the message if it exists, else read from the args.
-        if message.data.get('protocol') is not None:
-            schema = message.data['protocol']
-        else:
-            schema = self.args.get('schema')
-
         if mask is not None:
             try:
                 addresses = ipaddress.ip_network(f'{host}/{mask}')
                 for address in addresses.hosts():
-                    targets.append(Target(name=str(address), schema=schema, port=port))
+                    targets.append(Target(name=str(address),
+                                          schema=self._get_schema(message), port=self._get_port(message)))
             except ValueError as e:
                 logger.error('Invalid IP or mask. %s', e)
         else:
             try:
                 addresses = ipaddress.ip_network(host)
                 for address in addresses.hosts():
-                    targets.append(Target(name=str(address), schema=schema, port=port))
+                    targets.append(Target(name=str(address),
+                                          schema=self._get_schema(message), port=self._get_port(message)))
             except ValueError as e:
                 logger.error('Invalid IP. %s', e)
 
