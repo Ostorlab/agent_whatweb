@@ -147,3 +147,34 @@ def testAgentWhatWeb_whenAssetAlreadyScaned_doNothing(agent_mock, whatweb_test_a
             whatweb_test_agent.process(domain_msg)
             count_second = len(agent_mock)
             assert count_second - count_first == 0
+
+
+def testWhatWebAgent_whenIpMsgHasPortAndSchemaAndMask_emitsFingerprints(agent_mock, whatweb_test_agent,
+                                                                        ip_msg_with_port_schema_mask,
+                                                                        ip_msg_with_port_schema_mask_2, mocker):
+    """Test the whatweb agent with a given target address, with the port and protocol present in the message.
+    The tests mocks the call to WhatWeb binary  and validates the parsing and sending the findings to the queue.
+    """
+    detail = 'Found library `lighttpd`, version `1.4.28`, of type `BACKEND_COMPONENT` in target ' \
+             '`192.168.0.0`'
+
+    mocker.patch('subprocess.run', return_value=None)
+    with tempfile.TemporaryFile() as fp:
+        mocker.patch('tempfile.NamedTemporaryFile', return_value=fp)
+        with open(f'{pathlib.Path(__file__).parent}/ip_output.json', 'rb') as op:
+            fp.write(op.read())
+            fp.seek(0)
+            whatweb_test_agent.process(ip_msg_with_port_schema_mask)
+            assert len(agent_mock) == 52
+            assert any(fingerprint_msg.data.get('port') == 80 for fingerprint_msg in agent_mock)
+            assert any(fingerprint_msg.data.get('schema') == 'http' for fingerprint_msg in agent_mock)
+            assert any(fingerprint_msg.data.get('library_name') == 'lighttpd/1.4.28' for fingerprint_msg in agent_mock)
+            assert any(fingerprint_msg.data.get('library_version') == '1.4.28' for fingerprint_msg in agent_mock)
+            assert any(vuln_msg.data.get('title') == 'Tech Stack Fingerprint' for vuln_msg in agent_mock)
+            assert any(vuln_msg.data.get('risk_rating') == 'INFO' for vuln_msg in agent_mock)
+            assert any(vuln_msg.data.get('technical_detail') == detail for vuln_msg in agent_mock)
+            assert any(vuln_msg.data.get('security_issue') is True for vuln_msg in agent_mock)
+        mocker.patch('tempfile.NamedTemporaryFile', return_value=fp)
+        with open(f'{pathlib.Path(__file__).parent}/ip_output.json', 'rb') as op:
+            whatweb_test_agent.process(ip_msg_with_port_schema_mask)
+            assert len(agent_mock) == 52

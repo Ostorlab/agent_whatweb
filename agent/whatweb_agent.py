@@ -159,26 +159,34 @@ class AgentWhatWeb(agent.Agent,
 
     def _is_target_already_processed(self, message) -> bool:
         """Checks if the target has already been processed before, relies on the redis server."""
-        if message.data.get('url') is not None:
-            target = self._get_target_from_url(message.data['url'])
-            unicity_check_key = f'{target.schema}_{target.name}_{target.port}'
-        elif message.data.get('name') is not None:
-            port = self._get_port(message)
-            schema = self._get_schema(message)
-            domain = message.data['name']
-            unicity_check_key = f'{schema}_{domain}_{port}'
-        elif message.data.get('host') is not None:
-            port = self._get_port(message)
-            schema = self._get_schema(message)
-            host = message.data['host']
-            unicity_check_key = f'{schema}_{host}_{port}'
+        if message.data.get('url') is not None or message.data.get('name') is not None:
+            if message.data.get('url') is not None:
+                target = self._get_target_from_url(message.data['url'])
+                unicity_check_key = f'{target.schema}_{target.name}_{target.port}'
+            elif message.data.get('name') is not None:
+                port = self._get_port(message)
+                schema = self._get_schema(message)
+                domain = message.data['name']
+                unicity_check_key = f'{schema}_{domain}_{port}'
 
-        if self.set_add(b'agent_whatweb_asset', unicity_check_key) is True:
-            return True
-        else:
-            logger.info('target %s/ was processed before, exiting',
-                        unicity_check_key)
-            return False
+            if self.set_add(b'agent_whatweb_asset', unicity_check_key) is True:
+                return True
+            else:
+                logger.info('target %s/ was processed before, exiting', unicity_check_key)
+                return False
+        elif message.data.get('host') is not None:
+            host = message.data.get('host')
+            mask = message.data.get('mask')
+            if mask is not None:
+                addresses = ipaddress.ip_network(f'{host}/{mask}')
+                result = self.add_ip_network('agent_whois_ip_asset', addresses, lambda net: f'X_{net}_Y')
+            else:
+                addresses = host
+                result = self.set_add('agent_whois_ip_asset', host)
+
+            if result is False:
+                logger.info('target %s was processed before, exiting', addresses)
+            return result
 
     def _get_target_from_url(self, url: str) -> tuple:
         """Compute schema and port from an URL"""

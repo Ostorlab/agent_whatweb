@@ -56,6 +56,24 @@ def ip_msg_with_port_and_schema():
     return message
 
 
+@pytest.fixture
+def ip_msg_with_port_schema_mask():
+    """Creates a dummy message of type v3.asset.ip.v4.port.service for testing purposes."""
+    input_selector = 'v3.asset.ip.v4.port.service'
+    input_data = {'host': '192.168.0.0', 'port': 80, 'mask': '31', 'protocol': 'http'}
+    message = m.Message.from_data(selector=input_selector, data=input_data)
+    return message
+
+
+@pytest.fixture
+def ip_msg_with_port_schema_mask_2():
+    """Creates a dummy message of type v3.asset.ip.v4.port.service for testing purposes."""
+    input_selector = 'v3.asset.ip.v4.port.service'
+    input_data = {'host': '192.168.0.0', 'port': 80, 'mask': '32', 'protocol': 'http'}
+    message = m.Message.from_data(selector=input_selector, data=input_data)
+    return message
+
+
 @pytest.fixture(scope='function')
 def whatweb_test_agent(agent_persist_mock):
     """WhatWeb Agent fixture for testing purposes."""
