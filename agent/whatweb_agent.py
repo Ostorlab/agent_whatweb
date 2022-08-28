@@ -177,14 +177,14 @@ class AgentWhatWeb(agent.Agent,
         elif message.data.get('host') is not None:
             host = message.data.get('host')
             mask = message.data.get('mask')
+            schema = self._get_schema(message)
+            port = self._get_port(message)
             if mask is not None:
                 addresses = ipaddress.ip_network(f'{host}/{mask}')
-                schema = self._get_schema(message)
-                port = self._get_port(message)
                 result = self.add_ip_network('agent_whois_ip_asset', addresses, lambda net: f'{schema}_{net}_{port}')
             else:
                 addresses = host
-                result = self.set_add('agent_whois_ip_asset', host)
+                result = self.set_add('agent_whois_ip_asset', f'{schema}_{host}_{port}')
 
             if result is False:
                 logger.info('target %s was processed before, exiting', addresses)
