@@ -179,7 +179,9 @@ class AgentWhatWeb(agent.Agent,
             mask = message.data.get('mask')
             if mask is not None:
                 addresses = ipaddress.ip_network(f'{host}/{mask}')
-                result = self.add_ip_network('agent_whois_ip_asset', addresses, lambda net: f'X_{net}_Y')
+                schema = self._get_schema(message)
+                port = self._get_port(message)
+                result = self.add_ip_network('agent_whois_ip_asset', addresses, lambda net: f'{schema}_{net}_{port}')
             else:
                 addresses = host
                 result = self.set_add('agent_whois_ip_asset', host)
