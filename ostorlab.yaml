@@ -72,6 +72,7 @@ source: https://github.com/Ostorlab/agent_whatweb
 in_selectors:
  - v3.asset.domain_name
  - v3.asset.link
+ - v3.asset.ip
 out_selectors:
  - v3.fingerprint.domain_name.service.library
  - v3.report.vulnerability
