@@ -6,7 +6,7 @@ import pathlib
 from ostorlab.agent import definitions as agent_definitions
 from ostorlab.runtimes import definitions as runtime_definitions
 from ostorlab.utils import defintions
-from ostorlab.agent import message as m
+from ostorlab.agent.message import message as m
 
 from agent import whatweb_agent
 

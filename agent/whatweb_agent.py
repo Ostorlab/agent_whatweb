@@ -9,7 +9,7 @@ from urllib import parse
 import dataclasses
 
 from ostorlab.agent import agent
-from ostorlab.agent import message as msg
+from ostorlab.agent.message import message as msg
 from ostorlab.agent.kb import kb
 from ostorlab.agent import definitions as agent_definitions
 from ostorlab.runtimes import definitions as runtime_definitions
