@@ -1,5 +1,5 @@
 """Unittests for whatweb agent."""
-from typing import List, Dict, Union
+from typing import List
 import pathlib
 import tempfile
 import subprocess
