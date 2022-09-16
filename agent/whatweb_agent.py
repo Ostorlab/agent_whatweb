@@ -5,7 +5,7 @@ import logging
 import subprocess
 import ipaddress
 import tempfile
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from urllib import parse
 import dataclasses
 
@@ -60,6 +60,7 @@ class Target:
     schema: Optional[str] = None
     port: Optional[int] = None
 
+
 class AgentWhatWeb(agent.Agent,
                    agent_report_vulnerability_mixin.AgentReportVulnMixin,
                    persist_mixin.AgentPersistMixin):
@@ -83,13 +84,15 @@ class AgentWhatWeb(agent.Agent,
         logger.info('processing message of selector : %s', message.selector)
         targets = self._prepare_targets(message)
         for target in targets:
-            if self._is_target_already_processed(message) is False:
+            if self._should_target_be_processed(message) is False:
                 continue
             else:
-                with tempfile.NamedTemporaryFile() as fp:
-                    self._start_scan(target.name, fp.name)
-                    self._parse_emit_result(
-                        target.name, fp, int(target.port), target.schema)
+                try:
+                    with tempfile.NamedTemporaryFile() as fp:
+                        self._start_scan(target.name, fp.name)
+                        self._parse_emit_result(target.name, io.BytesIO(fp.read()), target.port, target.schema)
+                except subprocess.CalledProcessError as e:
+                    logger.error(e)
 
     def _prepare_targets(self, message: msg.Message) -> List[Target]:
         """Returns a list of target objects to be scanned."""
@@ -103,35 +106,34 @@ class AgentWhatWeb(agent.Agent,
     def _get_port(self, message: msg.Message) -> int:
         """Returns the port to be used for the target."""
         if message.data.get('port') is not None:
-            return message.data['port']
+            return int(message.data['port'])
         else:
-            return self.args.get('port')
+            return int(self.args['port'])
 
     def _get_schema(self, message: msg.Message) -> str:
         """Returns the schema to be used for the target."""
         if message.data.get('schema') is not None:
-            return message.data['schema']
+            return str(message.data['schema'])
         elif message.data.get('protocol') is not None:
-            return message.data['protocol']
+            return str(message.data['protocol'])
         else:
-            return self.args.get('schema')
+            return str(self.args['schema'])
 
     def _prepare_domain_targets(self, message: msg.Message) -> List[Target]:
         """Returns a list of domain targets to be scanned."""
-        targets = []
+        targets: List[Target] = []
         if message.data.get('url') is not None:
-            target = self._get_target_from_url(message.data['url'])
-            targets.append(target)
+            url_target = self._get_target_from_url(message.data['url'])
+            targets.append(url_target)
         elif message.data.get('name') is not None:
             domain_name = message.data['name']
-            target = Target(name=domain_name, schema=self._get_schema(message), port=self._get_port(message))
-            targets.append(target)
-
+            domain_target = Target(name=domain_name, schema=self._get_schema(message), port=self._get_port(message))
+            targets.append(domain_target)
         return targets
 
     def _prepare_ip_targets(self, message: msg.Message) -> List[Target]:
         """Returns a list of ip targets to be scanned."""
-        targets = []
+        targets: List[Target] = []
         host = message.data.get('host')
         mask = message.data.get('mask')
 
@@ -157,7 +159,7 @@ class AgentWhatWeb(agent.Agent,
 
         return targets
 
-    def _is_target_already_processed(self, message) -> bool:
+    def _should_target_be_processed(self, message: msg.Message) -> bool:
         """Checks if the target has already been processed before, relies on the redis server."""
         if message.data.get('url') is not None or message.data.get('name') is not None:
             if message.data.get('url') is not None:
@@ -182,28 +184,31 @@ class AgentWhatWeb(agent.Agent,
             if mask is not None:
                 addresses = ipaddress.ip_network(f'{host}/{mask}')
                 result = self.add_ip_network('agent_whois_ip_asset', addresses, lambda net: f'{schema}_{net}_{port}')
+                if result is False:
+                    logger.info('target %s was processed before, exiting', addresses)
             else:
-                addresses = host
                 result = self.set_add('agent_whois_ip_asset', f'{schema}_{host}_{port}')
-
-            if result is False:
-                logger.info('target %s was processed before, exiting', addresses)
+                if result is False:
+                    logger.info('target %s was processed before, exiting', host)
             return result
+        else:
+            logger.error('Unknown message type %s', message.data)
+            return False
 
-    def _get_target_from_url(self, url: str) -> tuple:
+    def _get_target_from_url(self, url: str) -> Target:
         """Compute schema and port from an URL"""
         parsed_url = parse.urlparse(url)
-        schema = parsed_url.scheme or self.args.get('schema')
+        schema = str(parsed_url.scheme) or str(self.args['schema'])
         domain_name = parse.urlparse(url).netloc
         port = 0
         if len(parsed_url.netloc.split(':')) > 1:
             domain_name = parsed_url.netloc.split(':')[0]
-            port = parsed_url.netloc.split(':')[-1]
-        port = int(port) or SCHEME_TO_PORT.get(schema) or self.args.get('port')
+            port = int(parsed_url.netloc.split(':')[-1]) if parsed_url.netloc.split(':')[-1] is not None else 0
+        port = port or SCHEME_TO_PORT[schema] or self.args['port']
         target = Target(name=domain_name, schema=schema, port=port)
         return target
 
-    def _start_scan(self, name: str, output_file: str):
+    def _start_scan(self, name: str, output_file: str) -> None:
         """Run a whatweb scan using python subprocess.
 
         Args:
@@ -216,7 +221,7 @@ class AgentWhatWeb(agent.Agent,
         subprocess.run(whatweb_command, cwd=WHATWEB_DIRECTORY, check=True)
 
     def _parse_emit_result(self, name: str, output_file: io.BytesIO,
-                           port: Optional[int] = None, schema: Optional[str] = None):
+                           port: Optional[int] = None, schema: Optional[str] = None) -> None:
         """After the scan is done, parse the output json file into a dict of the scan findings."""
         output_file.seek(0)
         try:
@@ -254,13 +259,14 @@ class AgentWhatWeb(agent.Agent,
                     else:
                         logger.warning('found result non list %s', result)
                 logger.info(
-                    'Scan is done Parsing the results from %s.', output_file.name)
+                    'Scan is done Parsing the results from %s.', output_file)
         except OSError as e:
             logger.error(
                 'Exception while processing %s with message %s', output_file, e)
 
     def _send_detected_fingerprints(self, name: str, port: Optional[int] = None, schema: Optional[str] = None,
-                                    library_name: Optional[str] = None, versions: Optional[List] = None):
+                                    library_name: Optional[str] = None,
+                                    versions: Optional[List[Optional[str]]] = None) -> None:
         """Emits the identified fingerprints.
 
         Args:
@@ -270,11 +276,12 @@ class AgentWhatWeb(agent.Agent,
             library_name: Library name.
             versions: The versions identified by WhatWeb scanner.
         """
-        logger.info('found fingerprint %s %s %s',
-                    name, library_name, versions)
+        logger.info('Found fingerprint %s %s %s', name, library_name, versions)
         fingerprint_type = FINGERPRINT_TYPE[
-            library_name.lower()] if library_name.lower() in FINGERPRINT_TYPE else DEFAULT_FINGERPRINT
-        if len(versions) > 0:
+            library_name.lower()] if \
+            (library_name is not None and library_name.lower() in FINGERPRINT_TYPE) else DEFAULT_FINGERPRINT
+
+        if versions is not None and len(versions) > 0:
             for version in versions:
                 msg_data = self._get_msg_data(
                     name, port, schema, library_name, version, fingerprint_type)
@@ -294,7 +301,7 @@ class AgentWhatWeb(agent.Agent,
                         targeted_by_nation_state=False
                     ),
                     technical_detail=f'Found library `{library_name}`, version `{str(version)}`, '
-                    f'of type `{fingerprint_type}` in target `{name}`',
+                                     f'of type `{fingerprint_type}` in target `{name}`',
                     risk_rating=agent_report_vulnerability_mixin.RiskRating.INFO)
         else:
             # No version is found.
@@ -316,14 +323,14 @@ class AgentWhatWeb(agent.Agent,
                     targeted_by_nation_state=False
                 ),
                 technical_detail=f'Found library `{library_name}` of type '
-                f'`{fingerprint_type}` in target `{name}`',
+                                 f'`{fingerprint_type}` in target `{name}`',
                 risk_rating=agent_report_vulnerability_mixin.RiskRating.INFO)
 
-    def _get_msg_data(self, name, port: Optional[int] = None, schema: Optional[str] = None,
+    def _get_msg_data(self, name: str, port: Optional[int] = None, schema: Optional[str] = None,
                       library_name: Optional[str] = None, version: Optional[str] = None,
-                      fingerprint_type: Optional[str] = None):
+                      fingerprint_type: Optional[str] = None) -> Dict[str, Any]:
         """Prepare  data of the library proto message to be emited."""
-        msg_data = {}
+        msg_data: Dict[str, Any] = {}
         if name is not None:
             msg_data['name'] = name
         if port is not None:

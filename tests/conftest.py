@@ -2,6 +2,7 @@
 import pytest
 import json
 import pathlib
+from typing import Dict, Union
 
 from ostorlab.agent import definitions as agent_definitions
 from ostorlab.runtimes import definitions as runtime_definitions
@@ -12,7 +13,7 @@ from agent import whatweb_agent
 
 
 @pytest.fixture
-def domain_msg():
+def domain_msg() -> m.Message:
     """Creates a dummy message of type v3.asset.domain_name for testing purposes."""
     input_selector = 'v3.asset.domain_name'
     input_data = {'name': 'ostorlab.co'}
@@ -21,7 +22,7 @@ def domain_msg():
 
 
 @pytest.fixture
-def domain_msg_with_port_and_schema():
+def domain_msg_with_port_and_schema() -> m.Message:
     """Creates a dummy message of type v3.asset.domain_name.service for testing purposes."""
     input_selector = 'v3.asset.domain_name.service'
     input_data = {'name': 'ostorlab.co', 'port': 80, 'schema': 'http'}
@@ -30,7 +31,7 @@ def domain_msg_with_port_and_schema():
 
 
 @pytest.fixture
-def link_msg():
+def link_msg() -> m.Message:
     """Creates a dummy message of type v3.asset.link for testing purposes."""
     input_selector = 'v3.asset.link'
     input_data = {'url': 'http://ostorlab.co', 'method': 'GET'}
@@ -39,7 +40,7 @@ def link_msg():
 
 
 @pytest.fixture
-def ip_msg():
+def ip_msg() -> m.Message:
     """Creates a dummy message of type v3.asset.ip for testing purposes."""
     input_selector = 'v3.asset.ip'
     input_data = {'host': '192.168.0.76'}
@@ -48,7 +49,7 @@ def ip_msg():
 
 
 @pytest.fixture
-def ip_msg_with_port_and_schema():
+def ip_msg_with_port_and_schema() -> m.Message:
     """Creates a dummy message of type v3.asset.ip.v4.port.service for testing purposes."""
     input_selector = 'v3.asset.ip.v4.port.service'
     input_data = {'host': '192.168.0.0', 'port': 80, 'protocol': 'http'}
@@ -57,7 +58,7 @@ def ip_msg_with_port_and_schema():
 
 
 @pytest.fixture
-def ip_msg_with_port_schema_mask():
+def ip_msg_with_port_schema_mask() -> m.Message:
     """Creates a dummy message of type v3.asset.ip.v4.port.service for testing purposes."""
     input_selector = 'v3.asset.ip.v4.port.service'
     input_data = {'host': '192.168.0.0', 'port': 80, 'mask': '31', 'protocol': 'http'}
@@ -66,7 +67,7 @@ def ip_msg_with_port_schema_mask():
 
 
 @pytest.fixture
-def ip_msg_with_port_schema_mask_2():
+def ip_msg_with_port_schema_mask_2() -> m.Message:
     """Creates a dummy message of type v3.asset.ip.v4.port.service for testing purposes."""
     input_selector = 'v3.asset.ip.v4.port.service'
     input_data = {'host': '192.168.0.0', 'port': 80, 'mask': '32', 'protocol': 'http'}
@@ -75,7 +76,7 @@ def ip_msg_with_port_schema_mask_2():
 
 
 @pytest.fixture(scope='function')
-def whatweb_test_agent(agent_persist_mock):
+def whatweb_test_agent(agent_persist_mock: Dict[Union[str, bytes], Union[str, bytes]]) -> whatweb_agent.AgentWhatWeb:
     """WhatWeb Agent fixture for testing purposes."""
     del agent_persist_mock
     with (pathlib.Path(__file__).parent.parent / 'ostorlab.yaml').open() as yaml_o:
