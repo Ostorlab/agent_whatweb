@@ -83,16 +83,16 @@ class AgentWhatWeb(agent.Agent,
         """
         logger.info('processing message of selector : %s', message.selector)
         targets = self._prepare_targets(message)
+        if self._should_target_be_processed(message) is False:
+            return
+
         for target in targets:
-            if self._should_target_be_processed(message) is False:
-                continue
-            else:
-                try:
-                    with tempfile.NamedTemporaryFile() as fp:
-                        self._start_scan(target.name, fp.name)
-                        self._parse_emit_result(target.name, io.BytesIO(fp.read()), target.port, target.schema)
-                except subprocess.CalledProcessError as e:
-                    logger.error(e)
+            try:
+                with tempfile.NamedTemporaryFile() as fp:
+                    self._start_scan(target.name, fp.name)
+                    self._parse_emit_result(target.name, io.BytesIO(fp.read()), target.port, target.schema)
+            except subprocess.CalledProcessError as e:
+                logger.error(e)
 
     def _prepare_targets(self, message: msg.Message) -> List[Target]:
         """Returns a list of target objects to be scanned."""
