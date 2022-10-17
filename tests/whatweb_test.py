@@ -224,3 +224,31 @@ def testWhatWebAgent_whenWhatWebReturnsError_ContinueProcessing(agent_mock: List
         with open(f'{pathlib.Path(__file__).parent}/ip_output.json', 'rb') as op:
             whatweb_test_agent.process(ip_msg_with_port_schema_mask)
             assert len(agent_mock) == 0
+
+def testWhatWebAgent_withIpMsgAndAllChecksEnabled_emitsFingerprintsWithlocation(agent_mock: List[message.Message],
+                                                                    whatweb_test_agent: whatweb_agent.AgentWhatWeb,
+                                                                    ip_msg: message.Message,
+                                                                    mocker: plugin.MockerFixture) -> None:
+    """Test the whatweb agent with a given target address. The tests mocks the call to WhatWeb binary
+    and validates the parsing and sending the findings to the queue.
+    """
+    mocker.patch('subprocess.run', return_value=None)
+    with tempfile.TemporaryFile() as fp:
+        mocker.patch('tempfile.NamedTemporaryFile', return_value=fp)
+        with open(f'{pathlib.Path(__file__).parent}/ip_output.json', 'rb') as op:
+            fp.write(op.read())
+            fp.seek(0)
+            whatweb_test_agent.process(ip_msg)
+            assert len(agent_mock) > 0
+            expected_fp_location = {
+                'ipv4': {
+                    'host': '192.168.0.76',
+                    'mask': '32',
+                    'version': 4
+                    },
+                'metadata': [{
+                    'value': '443',
+                    'type': 'PORT'
+                }]}
+            assert any(fingerprint.data.get('asset_location') == expected_fp_location for fingerprint in agent_mock)
+
