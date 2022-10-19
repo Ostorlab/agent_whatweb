@@ -5,7 +5,7 @@ import logging
 import subprocess
 import ipaddress
 import tempfile
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
 from urllib import parse
 import dataclasses
 
@@ -14,7 +14,7 @@ from ostorlab.agent.message import message as msg
 from ostorlab.agent.kb import kb
 from ostorlab.agent import definitions as agent_definitions
 from ostorlab.runtimes import definitions as runtime_definitions
-from ostorlab.agent.mixins import agent_report_vulnerability_mixin
+from ostorlab.agent.mixins import agent_report_vulnerability_mixin  as vuln_mixin
 from ostorlab.agent.mixins import agent_persist_mixin as persist_mixin
 from ostorlab.assets import domain_name as domain_asset
 from ostorlab.assets import ipv4 as ipv4_asset
@@ -73,7 +73,7 @@ class IPTarget:
 
 
 class AgentWhatWeb(agent.Agent,
-                   agent_report_vulnerability_mixin.AgentReportVulnMixin,
+                   vuln_mixin.AgentReportVulnMixin,
                    persist_mixin.AgentPersistMixin):
     """Agent responsible for finger-printing a website."""
 
@@ -82,7 +82,7 @@ class AgentWhatWeb(agent.Agent,
                  agent_settings: runtime_definitions.AgentSettings) -> None:
 
         agent.Agent.__init__(self, agent_definition, agent_settings)
-        agent_report_vulnerability_mixin.AgentReportVulnMixin.__init__(self)
+        vuln_mixin.AgentReportVulnMixin.__init__(self)
         persist_mixin.AgentPersistMixin.__init__(self, agent_settings)
 
     def process(self, message: msg.Message) -> None:
@@ -105,9 +105,9 @@ class AgentWhatWeb(agent.Agent,
             except subprocess.CalledProcessError as e:
                 logger.error(e)
 
-    def _prepare_targets(self, message: msg.Message) -> List[DomainTarget | IPTarget]:
+    def _prepare_targets(self, message: msg.Message) -> List[Union[DomainTarget, IPTarget]]:
         """Returns a list of target objects to be scanned."""
-        targets = []
+        targets:List[Union[DomainTarget, IPTarget]] = []
         domain_targets = self._prepare_domain_targets(message)
         ip_targets = self._prepare_ip_targets(message)
         targets.extend(domain_targets)
@@ -276,22 +276,23 @@ class AgentWhatWeb(agent.Agent,
                 'Exception while processing %s with message %s', output_file, e)
 
     def _get_vulnerable_target_data(self,
-                                    target: DomainTarget | IPTarget) -> agent_report_vulnerability_mixin.AssetLocation:
+                                    target: DomainTarget | IPTarget) -> vuln_mixin.VulnerabilityLocation:
         """Returns the target data where the fingerprint was found."""
-        metadata_type = agent_report_vulnerability_mixin.MetaDataType.PORT
+        metadata_type = vuln_mixin.MetadataType.PORT
         metadata_value = str(target.port)
         metadata = [
-            agent_report_vulnerability_mixin.AssetLocationMetaData(type=metadata_type, value=metadata_value)
+            vuln_mixin.VulnerabilityLocationMetadata(type=metadata_type, value=metadata_value)
         ]
         if isinstance(target, DomainTarget):
             asset = domain_asset.DomainName(name=target.name)
-            return agent_report_vulnerability_mixin.AssetLocation(asset=asset, metadata=metadata)
+            return vuln_mixin.VulnerabilityLocation(asset=asset, metadata=metadata)
         elif isinstance(target, IPTarget):
             if target.version==4:
-                asset = ipv4_asset.IPv4(host = target.name, version = 4, mask = '32')
+                ip_v4_asset = ipv4_asset.IPv4(host = target.name, version = 4, mask = '32')
+                return vuln_mixin.VulnerabilityLocation(asset=ip_v4_asset, metadata=metadata)
             else:
-                asset = ipv6_asset.IPv6(host = target.name, version = 6, mask = '128')
-            return agent_report_vulnerability_mixin.AssetLocation(asset=asset, metadata=metadata)
+                ip_v6_asset = ipv6_asset.IPv6(host = target.name, version = 6, mask = '128')
+                return vuln_mixin.VulnerabilityLocation(asset=ip_v6_asset, metadata=metadata)
         else:
             raise NotImplementedError(f'type target { type(target)} not implemented')
 
@@ -333,8 +334,8 @@ class AgentWhatWeb(agent.Agent,
                     ),
                     technical_detail=f'Found library `{library_name}`, version `{str(version)}`, '
                                      f'of type `{fingerprint_type}` in target `{target.name}`',
-                    risk_rating=agent_report_vulnerability_mixin.RiskRating.INFO,
-                    asset_location=vulnerable_target_data)
+                    risk_rating=vuln_mixin.RiskRating.INFO,
+                    vulnerability_location=vulnerable_target_data)
         else:
             # No version is found.
             msg_data = self._get_msg_data(target, library_name, None, fingerprint_type)
@@ -355,8 +356,8 @@ class AgentWhatWeb(agent.Agent,
                 ),
                 technical_detail=f'Found library `{library_name}` of type '
                                  f'`{fingerprint_type}` in target `{target.name}`',
-                risk_rating=agent_report_vulnerability_mixin.RiskRating.INFO,
-                asset_location=vulnerable_target_data)
+                risk_rating=vuln_mixin.RiskRating.INFO,
+                vulnerability_location=vulnerable_target_data)
 
     def _get_msg_data(self, target: DomainTarget | IPTarget,
                       library_name: Optional[str] = None, version: Optional[str] = None,

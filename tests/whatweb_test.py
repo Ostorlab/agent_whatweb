@@ -240,7 +240,7 @@ def testWhatWebAgent_withIpMsgAndAllChecksEnabled_emitsFingerprintsWithlocation(
             fp.seek(0)
             whatweb_test_agent.process(ip_msg)
             assert len(agent_mock) > 0
-            expected_fp_location = {
+            fp_location = {
                 'ipv4': {
                     'host': '192.168.0.76',
                     'mask': '32',
@@ -250,5 +250,5 @@ def testWhatWebAgent_withIpMsgAndAllChecksEnabled_emitsFingerprintsWithlocation(
                     'value': '443',
                     'type': 'PORT'
                 }]}
-            assert any(fingerprint.data.get('asset_location') == expected_fp_location for fingerprint in agent_mock)
+            assert any(fingerprint.data.get('vulnerability_location') == fp_location for fingerprint in agent_mock)
 
