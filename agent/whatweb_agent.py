@@ -5,7 +5,7 @@ import logging
 import subprocess
 import ipaddress
 import tempfile
-from typing import List, Optional, Dict, Any, Union
+from typing import List, Optional, Dict, Any
 from urllib import parse
 import dataclasses
 
@@ -105,9 +105,9 @@ class AgentWhatWeb(agent.Agent,
             except subprocess.CalledProcessError as e:
                 logger.error(e)
 
-    def _prepare_targets(self, message: msg.Message) -> List[Union[DomainTarget, IPTarget]]:
+    def _prepare_targets(self, message: msg.Message) -> List[DomainTarget | IPTarget]:
         """Returns a list of target objects to be scanned."""
-        targets:List[Union[DomainTarget, IPTarget]] = []
+        targets:List[DomainTarget | IPTarget] = []
         domain_targets = self._prepare_domain_targets(message)
         ip_targets = self._prepare_ip_targets(message)
         targets.extend(domain_targets)
