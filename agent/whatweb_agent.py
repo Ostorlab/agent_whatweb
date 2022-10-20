@@ -275,7 +275,7 @@ class AgentWhatWeb(agent.Agent,
             logger.error(
                 'Exception while processing %s with message %s', output_file, e)
 
-    def _get_vulnerable_target_data(self,
+    def _prepare_vulnerable_target_data(self,
                                     target: DomainTarget | IPTarget) -> vuln_mixin.VulnerabilityLocation:
         """Returns the target data where the fingerprint was found."""
         metadata_type = vuln_mixin.MetadataType.PORT
@@ -312,7 +312,7 @@ class AgentWhatWeb(agent.Agent,
             library_name.lower()] if \
             (library_name is not None and library_name.lower() in FINGERPRINT_TYPE) else DEFAULT_FINGERPRINT
 
-        vulnerable_target_data = self._get_vulnerable_target_data(target)
+        vulnerable_target_data = self._prepare_vulnerable_target_data(target)
 
         if versions is not None and len(versions) > 0:
             for version in versions:
