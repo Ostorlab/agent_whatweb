@@ -281,7 +281,7 @@ class AgentWhatWeb(agent.Agent,
         metadata_type = vuln_mixin.MetadataType.PORT
         metadata_value = str(target.port)
         metadata = [
-            vuln_mixin.VulnerabilityLocationMetadata(type=metadata_type, value=metadata_value)
+            vuln_mixin.VulnerabilityLocationMetadata(metadata_type=metadata_type, value=metadata_value)
         ]
         if isinstance(target, DomainTarget):
             asset = domain_asset.DomainName(name=target.name)
