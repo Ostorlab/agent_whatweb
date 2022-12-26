@@ -9,7 +9,7 @@ RUN pip install --prefix=/install -r /requirement.txt
 
 
 FROM base
-RUN apk update && apk add --virtual build-dependencies build-base ruby ruby-dev git
+RUN apk update && apk add --virtual build-dependencies build-base ruby ruby-dev git yaml-dev
 RUN gem install bundler
 RUN git clone https://github.com/urbanadventurer/WhatWeb.git
 WORKDIR /WhatWeb
