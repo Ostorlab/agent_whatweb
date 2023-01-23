@@ -213,22 +213,21 @@ class AgentWhatWeb(
     def _is_domain_in_scope(
         self,
         message: msg.Message,
-        scope_domain_regex: Optional[str],
     ) -> bool:
         """Check if a domain is in the scan scope with a regular expression."""
-        if scope_domain_regex is None:
+        if self._scope_domain_regex is None:
             return True
         domain = ""
         if message.data.get("url") is not None:
             domain = self._get_target_from_url(message.data["url"]).name
         if message.data.get("name") is not None:
             domain = message.data["name"]
-        domain_in_scope = re.match(scope_domain_regex, domain)
+        domain_in_scope = re.match(self._scope_domain_regex, domain)
         if domain_in_scope is None:
             logger.warning(
                 "Domain %s is not in scanning scope %s",
                 domain,
-                scope_domain_regex,
+                self._scope_domain_regex,
             )
             return False
         else:
@@ -255,9 +254,7 @@ class AgentWhatWeb(
                 logger.info("target %s/ was processed before, exiting", unique_key)
                 return False
 
-            is_domain_in_scope = self._is_domain_in_scope(
-                message, self._scope_domain_regex
-            )
+            is_domain_in_scope = self._is_domain_in_scope(message)
             return is_domain_in_scope
 
         elif message.data.get("host") is not None:
