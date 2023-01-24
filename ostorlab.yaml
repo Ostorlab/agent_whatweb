@@ -87,3 +87,6 @@ args:
    type: string
    description: "Target that doesn't specify a schema will use this argument."
    value: https
+ - name: "scope_domain_regex"
+   type: "string"
+   description: "Regular expression to define domain scanning scope."
