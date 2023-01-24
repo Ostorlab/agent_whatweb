@@ -1,4 +1,5 @@
 """WhatWeb Agent: Agent responsible for finger-printing a website."""
+import abc
 import io
 import json
 import logging
@@ -78,25 +79,67 @@ LIB_SELECTOR = "v3.fingerprint.domain_name.service.library"
 SCHEME_TO_PORT = {"http": 80, "https": 443}
 
 
+class BaseTarget(abc.ABC):
+    """Base target with a target property for use by the Whatweb binary."""
+
+    @property
+    @abc.abstractmethod
+    def target(self) -> str:
+        """Prepare target."""
+        raise NotImplementedError()
+
+
 @dataclasses.dataclass
-class DomainTarget:
+class DomainTarget(BaseTarget):
+    """Domain target."""
+
     name: str
     schema: Optional[str] = None
     port: Optional[int] = None
 
+    @property
+    def target(self) -> str:
+        """Prepare target."""
+        url = ""
+        if self.schema is not None:
+            url += f"{self.schema}://"
+
+        url += self.name
+
+        if self.port is not None:
+            url += f":{self.port}"
+
+        return url
+
 
 @dataclasses.dataclass
-class IPTarget:
+class IPTarget(BaseTarget):
+    """IP target."""
+
     name: str
     version: int
     schema: Optional[str] = None
     port: Optional[int] = None
 
+    @property
+    def target(self) -> str:
+        """Prepare target."""
+        url = ""
+        if self.schema is not None:
+            url += f"{self.schema}://"
+
+        url += self.name
+
+        if self.port is not None:
+            url += f":{self.port}"
+
+        return url
+
 
 class AgentWhatWeb(
     agent.Agent, vuln_mixin.AgentReportVulnMixin, persist_mixin.AgentPersistMixin
 ):
-    """Agent responsible for finger-printing a website."""
+    """Agent responsible for fingerprinting a website."""
 
     def __init__(
         self,
@@ -129,7 +172,7 @@ class AgentWhatWeb(
             except subprocess.CalledProcessError as e:
                 logger.error(e)
 
-    def _prepare_targets(self, message: msg.Message) -> List[DomainTarget | IPTarget]:
+    def _prepare_targets(self, message: msg.Message) -> List[IPTarget | DomainTarget]:
         """Returns a list of target objects to be scanned."""
         targets: List[DomainTarget | IPTarget] = []
         domain_targets = self._prepare_domain_targets(message)
@@ -281,7 +324,7 @@ class AgentWhatWeb(
             return False
 
     def _get_target_from_url(self, url: str) -> DomainTarget:
-        """Compute schema and port from an URL"""
+        """Compute schema and port from a URL"""
         parsed_url = parse.urlparse(url)
         schema = str(parsed_url.scheme) or str(self.args["schema"])
         domain_name = parse.urlparse(url).netloc
@@ -308,7 +351,7 @@ class AgentWhatWeb(
         whatweb_command = [
             WHATWEB_PATH,
             f"--log-json-verbose={output_file}",
-            target.name,
+            target.target,
         ]
         subprocess.run(whatweb_command, cwd=WHATWEB_DIRECTORY, check=True)
 
