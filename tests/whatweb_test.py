@@ -393,7 +393,7 @@ def testWhatWebAgent_withIpMsgAndAllChecksEnabled_emitsFingerprintsWithlocation(
     """Test the whatweb agent with a given target address. The tests mocks the call to WhatWeb binary
     and validates the parsing and sending the findings to the queue.
     """
-    mocker.patch("subprocess.run", return_value=None)
+    subprocess_mock = mocker.patch("subprocess.run", return_value=None)
     with tempfile.TemporaryFile() as fp:
         mocker.patch("tempfile.NamedTemporaryFile", return_value=fp)
         with open(f"{pathlib.Path(__file__).parent}/ip_output.json", "rb") as op:
@@ -411,6 +411,9 @@ def testWhatWebAgent_withIpMsgAndAllChecksEnabled_emitsFingerprintsWithlocation(
                 fingerprint.data.get("vulnerability_location") == fp_location
                 for fingerprint in agent_mock
             )
+            assert (
+                subprocess_mock.mock_calls[0].args[0][2] == "https://192.168.0.76:443"
+            )
 
 
 def testWhatWebAgent_withDomainMsgAndAllChecksEnabled_emitsFingerprintsWithlocation(
@@ -422,7 +425,7 @@ def testWhatWebAgent_withDomainMsgAndAllChecksEnabled_emitsFingerprintsWithlocat
     """Test the whatweb agent with a given target address. The tests mocks the call to WhatWeb binary
     and validates the parsing and sending the findings to the queue.
     """
-    mocker.patch("subprocess.run", return_value=None)
+    subprocess_mock = mocker.patch("subprocess.run", return_value=None)
     with tempfile.TemporaryFile() as fp:
         mocker.patch("tempfile.NamedTemporaryFile", return_value=fp)
         with open(f"{pathlib.Path(__file__).parent}/ip_output.json", "rb") as op:
@@ -442,3 +445,4 @@ def testWhatWebAgent_withDomainMsgAndAllChecksEnabled_emitsFingerprintsWithlocat
                 fingerprint.data.get("vulnerability_location") == fp_location
                 for fingerprint in agent_mock
             )
+            assert subprocess_mock.mock_calls[0].args[0][2] == "https://ostorlab.co:443"
