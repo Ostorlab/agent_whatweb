@@ -83,7 +83,7 @@ class BaseTarget(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def target(self):
+    def target(self) -> str:
         """Prepare target."""
         raise NotImplementedError()
 
@@ -97,7 +97,7 @@ class DomainTarget(BaseTarget):
     port: Optional[int] = None
 
     @property
-    def target(self):
+    def target(self) -> str:
         """Prepare target."""
         url = ""
         if self.schema is not None:
@@ -121,7 +121,7 @@ class IPTarget(BaseTarget):
     port: Optional[int] = None
 
     @property
-    def target(self):
+    def target(self) -> str:
         """Prepare target."""
         url = ""
         if self.schema is not None:
@@ -170,7 +170,7 @@ class AgentWhatWeb(
             except subprocess.CalledProcessError as e:
                 logger.error(e)
 
-    def _prepare_targets(self, message: msg.Message) -> List[BaseTarget]:
+    def _prepare_targets(self, message: msg.Message) -> List[IPTarget | DomainTarget]:
         """Returns a list of target objects to be scanned."""
         targets: List[DomainTarget | IPTarget] = []
         domain_targets = self._prepare_domain_targets(message)
