@@ -1,6 +1,6 @@
 kind: Agent
 name: whatweb
-version: 0.1.10
+version: 0.1.11
 image: images/logo.png
 description: |
  This repository is an implementation of [Ostorlab Agent](https://pypi.org/project/ostorlab/) for the [WhatWeb Fingerprinter](https://github.com/urbanadventurer/WhatWeb.git).
@@ -87,3 +87,6 @@ args:
    type: string
    description: "Target that doesn't specify a schema will use this argument."
    value: https
+ - name: "scope_domain_regex"
+   type: "string"
+   description: "Regular expression to define domain scanning scope."

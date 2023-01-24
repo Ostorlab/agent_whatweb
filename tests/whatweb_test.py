@@ -446,3 +446,60 @@ def testWhatWebAgent_withDomainMsgAndAllChecksEnabled_emitsFingerprintsWithlocat
                 for fingerprint in agent_mock
             )
             assert subprocess_mock.mock_calls[0].args[0][2] == "https://ostorlab.co:443"
+
+
+def testWhatWebAgent_withDomainScopeArgAndLinkMessageInScope_emitsFingerprints(
+    agent_mock: List[message.Message],
+    whatweb_agent_with_scope_arg: whatweb_agent.AgentWhatWeb,
+    link_msg: message.Message,
+    mocker: plugin.MockerFixture,
+) -> None:
+    """Ensure the domain scope argument is enforced, and urls in the scope should be scanned."""
+    detail = (
+        "Found library `Google-Analytics`, version `Universal`, of type `BACKEND_COMPONENT` in target "
+        "`ostorlab.co`"
+    )
+    mocker.patch("subprocess.run", return_value=None)
+    with tempfile.TemporaryFile() as fp:
+        mocker.patch("tempfile.NamedTemporaryFile", return_value=fp)
+        with open(f"{pathlib.Path(__file__).parent}/output.json", "rb") as op:
+            fp.write(op.read())
+            fp.seek(0)
+
+            whatweb_agent_with_scope_arg.process(link_msg)
+
+            assert len(agent_mock) > 0
+            assert any(
+                fingerprint_msg.data.get("schema") == "http"
+                for fingerprint_msg in agent_mock
+            )
+            assert any(
+                fingerprint_msg.data.get("library_name") == "Google-Analytics"
+                for fingerprint_msg in agent_mock
+            )
+            assert any(
+                vuln_msg.data.get("technical_detail") == detail
+                for vuln_msg in agent_mock
+            )
+
+
+def testWhatWebAgent_withDomainScopeArgAndLinkMessageNotInScope_targetShouldNotBeScanned(
+    agent_mock: List[message.Message],
+    whatweb_agent_with_scope_arg: whatweb_agent.AgentWhatWeb,
+    mocker: plugin.MockerFixture,
+) -> None:
+    """Ensure the domain scope argument is enforced, and urls not in the scope should not be scanned."""
+    input_selector = "v3.asset.link"
+    input_data = {"url": "http://support.google.co", "method": "GET"}
+    link_msg = message.Message.from_data(selector=input_selector, data=input_data)
+
+    mocker.patch("subprocess.run", return_value=None)
+    with tempfile.TemporaryFile() as fp:
+        mocker.patch("tempfile.NamedTemporaryFile", return_value=fp)
+        with open(f"{pathlib.Path(__file__).parent}/output.json", "rb") as op:
+            fp.write(op.read())
+            fp.seek(0)
+
+            whatweb_agent_with_scope_arg.process(link_msg)
+
+            assert len(agent_mock) == 0

@@ -6,9 +6,10 @@ import logging
 import subprocess
 import ipaddress
 import tempfile
-from typing import List, Optional, Dict, Any
 from urllib import parse
 import dataclasses
+import re
+from typing import List, Optional, Dict, Any
 
 from ostorlab.agent import agent
 from ostorlab.agent.message import message as msg
@@ -149,6 +150,7 @@ class AgentWhatWeb(
         agent.Agent.__init__(self, agent_definition, agent_settings)
         vuln_mixin.AgentReportVulnMixin.__init__(self)
         persist_mixin.AgentPersistMixin.__init__(self, agent_settings)
+        self._scope_domain_regex: Optional[str] = self.args.get("scope_domain_regex")
 
     def process(self, message: msg.Message) -> None:
         """Starts a whatweb scan, wait for the scan to finish,
@@ -251,25 +253,53 @@ class AgentWhatWeb(
 
         return targets
 
+    def _is_domain_in_scope(
+        self,
+        message: msg.Message,
+    ) -> bool:
+        """Check if a domain is in the scan scope with a regular expression."""
+        if self._scope_domain_regex is None:
+            return True
+        domain = ""
+        if message.data.get("url") is not None:
+            domain = self._get_target_from_url(message.data["url"]).name
+        if message.data.get("name") is not None:
+            domain = message.data["name"]
+        domain_in_scope = re.match(self._scope_domain_regex, domain)
+        if domain_in_scope is None:
+            logger.warning(
+                "Domain %s is not in scanning scope %s",
+                domain,
+                self._scope_domain_regex,
+            )
+            return False
+        else:
+            return True
+
+    def _get_web_target_unique_key(self, message: msg.Message) -> str:
+        """Returns a unique key identifier to be used to check if the target was scanned before."""
+        unique_key = ""
+        if message.data.get("url") is not None:
+            target = self._get_target_from_url(message.data["url"])
+            unique_key = f"{target.schema}_{target.name}_{target.port}"
+        if message.data.get("name") is not None:
+            port = self._get_port(message)
+            schema = self._get_schema(message)
+            domain = message.data["name"]
+            unique_key = f"{schema}_{domain}_{port}"
+        return unique_key
+
     def _should_target_be_processed(self, message: msg.Message) -> bool:
         """Checks if the target has already been processed before, relies on the redis server."""
         if message.data.get("url") is not None or message.data.get("name") is not None:
-            if message.data.get("url") is not None:
-                target = self._get_target_from_url(message.data["url"])
-                unicity_check_key = f"{target.schema}_{target.name}_{target.port}"
-            elif message.data.get("name") is not None:
-                port = self._get_port(message)
-                schema = self._get_schema(message)
-                domain = message.data["name"]
-                unicity_check_key = f"{schema}_{domain}_{port}"
-
-            if self.set_add(b"agent_whatweb_asset", unicity_check_key) is True:
-                return True
-            else:
-                logger.info(
-                    "target %s/ was processed before, exiting", unicity_check_key
-                )
+            unique_key = self._get_web_target_unique_key(message)
+            if self.set_add(b"agent_whatweb_asset", unique_key) is False:
+                logger.info("target %s/ was processed before, exiting", unique_key)
                 return False
+
+            is_domain_in_scope = self._is_domain_in_scope(message)
+            return is_domain_in_scope
+
         elif message.data.get("host") is not None:
             host = message.data.get("host")
             mask = message.data.get("mask")
