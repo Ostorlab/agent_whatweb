@@ -79,20 +79,26 @@ SCHEME_TO_PORT = {"http": 80, "https": 443}
 
 
 class BaseTarget(abc.ABC):
+    """Base target with a target property for use by the Whatweb binary."""
+
     @property
     @abc.abstractmethod
     def target(self):
+        """Prepare target."""
         raise NotImplementedError()
 
 
 @dataclasses.dataclass
 class DomainTarget(BaseTarget):
+    """Domain target."""
+
     name: str
     schema: Optional[str] = None
     port: Optional[int] = None
 
     @property
     def target(self):
+        """Prepare target."""
         url = ""
         if self.schema is not None:
             url += f"{self.schema}://"
@@ -107,6 +113,8 @@ class DomainTarget(BaseTarget):
 
 @dataclasses.dataclass
 class IPTarget(BaseTarget):
+    """IP target."""
+
     name: str
     version: int
     schema: Optional[str] = None
@@ -114,6 +122,7 @@ class IPTarget(BaseTarget):
 
     @property
     def target(self):
+        """Prepare target."""
         url = ""
         if self.schema is not None:
             url += f"{self.schema}://"
