@@ -1,11 +1,11 @@
 """Unittests for whatweb agent."""
-from typing import List
 import pathlib
-import tempfile
 import subprocess
+import tempfile
+from typing import List
 
-from pytest_mock import plugin
 from ostorlab.agent.message import message
+from pytest_mock import plugin
 
 from agent import whatweb_agent
 
@@ -302,7 +302,6 @@ def testWhatWebAgent_whenIpMsgHasPortAndSchemaAndMask_emitsFingerprints(
     agent_mock: List[message.Message],
     whatweb_test_agent: whatweb_agent.AgentWhatWeb,
     ip_msg_with_port_schema_mask: message.Message,
-    ip_msg_with_port_schema_mask_2: message.Message,
     mocker: plugin.MockerFixture,
 ) -> None:
     """Test the whatweb agent with a given target address, with the port and protocol present in the message.
@@ -360,7 +359,6 @@ def testWhatWebAgent_whenWhatWebReturnsError_ContinueProcessing(
     agent_mock: List[message.Message],
     whatweb_test_agent: whatweb_agent.AgentWhatWeb,
     ip_msg_with_port_schema_mask: message.Message,
-    ip_msg_with_port_schema_mask_2: message.Message,
     mocker: plugin.MockerFixture,
 ) -> None:
     """Test the whatweb agent with a given target address, with the port and protocol present in the message.
@@ -503,3 +501,23 @@ def testWhatWebAgent_withDomainScopeArgAndLinkMessageNotInScope_targetShouldNotB
             whatweb_agent_with_scope_arg.process(link_msg)
 
             assert len(agent_mock) == 0
+
+
+def testWhatWebAgent_withUnsupportedSchema_targetShouldNotBeScanned(
+    agent_mock: List[message.Message],
+    whatweb_test_agent: whatweb_agent.AgentWhatWeb,
+    mocker: plugin.MockerFixture,
+) -> None:
+    """Ensure when the schema is not supported, the target should not be scanned."""
+    # prepare
+    input_selector = "v3.asset.link"
+    input_data = {"url": "mailto://me@google.com", "method": "GET"}
+    link_msg = message.Message.from_data(selector=input_selector, data=input_data)
+    subprocess_mock = mocker.patch("subprocess.run", return_value=None)
+
+    # act
+    whatweb_test_agent.process(link_msg)
+
+    # assert
+    assert len(agent_mock) == 0
+    assert subprocess_mock.call_count == 0
