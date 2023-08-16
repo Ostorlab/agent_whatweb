@@ -508,7 +508,7 @@ def testWhatWebAgent_withUnsupportedSchema_targetShouldNotBeScanned(
     whatweb_test_agent: whatweb_agent.AgentWhatWeb,
     mocker: plugin.MockerFixture,
 ) -> None:
-    """Ensure the domain scope argument is enforced, and urls not in the scope should not be scanned."""
+    """Ensure when the schema is not supported, the target should not be scanned."""
     # prepare
     input_selector = "v3.asset.link"
     input_data = {"url": "mailto://me@google.com", "method": "GET"}
