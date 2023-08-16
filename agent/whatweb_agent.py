@@ -1,26 +1,26 @@
 """WhatWeb Agent: Agent responsible for finger-printing a website."""
 import abc
+import dataclasses
 import io
+import ipaddress
 import json
 import logging
-import subprocess
-import ipaddress
-import tempfile
-from urllib import parse
-import dataclasses
 import re
+import subprocess
+import tempfile
 from typing import List, Optional, Dict, Any
+from urllib import parse
 
 from ostorlab.agent import agent
-from ostorlab.agent.message import message as msg
-from ostorlab.agent.kb import kb
 from ostorlab.agent import definitions as agent_definitions
-from ostorlab.runtimes import definitions as runtime_definitions
-from ostorlab.agent.mixins import agent_report_vulnerability_mixin as vuln_mixin
+from ostorlab.agent.kb import kb
+from ostorlab.agent.message import message as msg
 from ostorlab.agent.mixins import agent_persist_mixin as persist_mixin
+from ostorlab.agent.mixins import agent_report_vulnerability_mixin as vuln_mixin
 from ostorlab.assets import domain_name as domain_asset
 from ostorlab.assets import ipv4 as ipv4_asset
 from ostorlab.assets import ipv6 as ipv6_asset
+from ostorlab.runtimes import definitions as runtime_definitions
 from rich import logging as rich_logging
 
 logging.basicConfig(
@@ -201,7 +201,8 @@ class AgentWhatWeb(
         targets: List[DomainTarget] = []
         if message.data.get("url") is not None:
             url_target = self._get_target_from_url(message.data["url"])
-            targets.append(url_target)
+            if url_target is not None:
+                targets.append(url_target)
         elif message.data.get("name") is not None:
             domain_name = message.data["name"]
             domain_target = DomainTarget(
@@ -261,7 +262,9 @@ class AgentWhatWeb(
             return True
         domain = ""
         if message.data.get("url") is not None:
-            domain = self._get_target_from_url(message.data["url"]).name
+            extracted_domain = self._get_target_from_url(message.data["url"])
+            if extracted_domain is not None:
+                domain = extracted_domain.name
         if message.data.get("name") is not None:
             domain = message.data["name"]
         domain_in_scope = re.match(self._scope_domain_regex, domain)
@@ -275,12 +278,13 @@ class AgentWhatWeb(
         else:
             return True
 
-    def _get_web_target_unique_key(self, message: msg.Message) -> str:
+    def _get_web_target_unique_key(self, message: msg.Message) -> str | None:
         """Returns a unique key identifier to be used to check if the target was scanned before."""
-        unique_key = ""
+        unique_key = None
         if message.data.get("url") is not None:
-            target = self._get_target_from_url(message.data["url"])
-            unique_key = f"{target.schema}_{target.name}_{target.port}"
+            extracted_target = self._get_target_from_url(message.data["url"])
+            if extracted_target is not None:
+                unique_key = f"{extracted_target.schema}_{extracted_target.name}_{extracted_target.port}"
         if message.data.get("name") is not None:
             port = self._get_port(message)
             schema = self._get_schema(message)
@@ -292,6 +296,8 @@ class AgentWhatWeb(
         """Checks if the target has already been processed before, relies on the redis server."""
         if message.data.get("url") is not None or message.data.get("name") is not None:
             unique_key = self._get_web_target_unique_key(message)
+            if unique_key is None:
+                return False
             if self.set_add(b"agent_whatweb_asset", unique_key) is False:
                 logger.info("target %s/ was processed before, exiting", unique_key)
                 return False
@@ -322,12 +328,15 @@ class AgentWhatWeb(
             logger.error("Unknown message type %s", message.data)
             return False
 
-    def _get_target_from_url(self, url: str) -> DomainTarget:
+    def _get_target_from_url(self, url: str) -> DomainTarget | None:
         """Compute schema and port from a URL"""
         parsed_url = parse.urlparse(url)
+        if parsed_url.scheme not in SCHEME_TO_PORT:
+            logger.warning("Unsupported schema %s", parsed_url.scheme)
+            return None
         schema = str(parsed_url.scheme) or str(self.args["schema"])
         domain_name = parse.urlparse(url).netloc
-        port = 0
+        port = None
         if len(parsed_url.netloc.split(":")) > 1:
             domain_name = parsed_url.netloc.split(":")[0]
             port = (
@@ -335,7 +344,7 @@ class AgentWhatWeb(
                 if parsed_url.netloc.split(":")[-1] is not None
                 else 0
             )
-        port = port or SCHEME_TO_PORT[schema] or self.args["port"]
+        port = port or SCHEME_TO_PORT.get(schema) or self.args.get("port")
         target = DomainTarget(name=domain_name, schema=schema, port=port)
         return target
 
@@ -426,7 +435,7 @@ class AgentWhatWeb(
                     asset=ip_v6_asset, metadata=metadata
                 )
         else:
-            raise NotImplementedError(f"type target { type(target)} not implemented")
+            raise NotImplementedError(f"type target {type(target)} not implemented")
 
     def _send_detected_fingerprints(
         self,
