@@ -280,17 +280,16 @@ class AgentWhatWeb(
 
     def _get_web_target_unique_key(self, message: msg.Message) -> str | None:
         """Returns a unique key identifier to be used to check if the target was scanned before."""
-        unique_key = None
         if message.data.get("url") is not None:
             extracted_target = self._get_target_from_url(message.data["url"])
             if extracted_target is not None:
-                unique_key = f"{extracted_target.schema}_{extracted_target.name}_{extracted_target.port}"
+                return f"{extracted_target.schema}_{extracted_target.name}_{extracted_target.port}"
         if message.data.get("name") is not None:
             port = self._get_port(message)
             schema = self._get_schema(message)
             domain = message.data["name"]
-            unique_key = f"{schema}_{domain}_{port}"
-        return unique_key
+            return f"{schema}_{domain}_{port}"
+        return None
 
     def _should_target_be_processed(self, message: msg.Message) -> bool:
         """Checks if the target has already been processed before, relies on the redis server."""
