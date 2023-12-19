@@ -77,6 +77,8 @@ WHATWEB_PATH = "./whatweb"
 WHATWEB_DIRECTORY = "/WhatWeb"
 LIB_SELECTOR = "v3.fingerprint.domain_name.service.library"
 SCHEME_TO_PORT = {"http": 80, "https": 443}
+IPV4_CIDR_LIMIT = 16
+IPV6_CIDR_LIMIT = 112
 
 
 class BaseTarget(abc.ABC):
@@ -218,39 +220,33 @@ class AgentWhatWeb(
         targets: List[IPTarget] = []
         host = message.data.get("host")
         mask = message.data.get("mask")
-
         if host is None:
             return targets
-
-        if mask is not None:
-            try:
-                addresses = ipaddress.ip_network(f"{host}/{mask}", strict=False)
-                for address in addresses.hosts():
-                    targets.append(
-                        IPTarget(
-                            name=str(address),
-                            version=address.version,
-                            schema=self._get_schema(message),
-                            port=self._get_port(message),
-                        )
-                    )
-            except ValueError as e:
-                logger.error("Invalid IP or mask. %s", e)
+        if mask is None:
+            network = ipaddress.ip_network(f"{host}")
         else:
-            try:
-                addresses = ipaddress.ip_network(host, strict=False)
-                for address in addresses.hosts():
-                    targets.append(
-                        IPTarget(
-                            name=str(address),
-                            version=address.version,
-                            schema=self._get_schema(message),
-                            port=self._get_port(message),
-                        )
-                    )
-            except ValueError as e:
-                logger.error("Invalid IP. %s", e)
+            version = message.data.get("version")
+            if version not in (4, 6):
+                raise ValueError(f"Incorrect ip version {version}.")
+            elif version == 4 and int(mask) < IPV4_CIDR_LIMIT:
+                raise ValueError(
+                    f"Subnet mask below {IPV4_CIDR_LIMIT} is not supported."
+                )
+            elif version == 6 and int(mask) < IPV6_CIDR_LIMIT:
+                raise ValueError(
+                    f"Subnet mask below {IPV6_CIDR_LIMIT} is not supported."
+                )
+            network = ipaddress.ip_network(f"{host}/{mask}", strict=False)
 
+        for address in network.hosts():
+            targets.append(
+                IPTarget(
+                    name=str(address),
+                    version=address.version,
+                    schema=self._get_schema(message),
+                    port=self._get_port(message),
+                )
+            )
         return targets
 
     def _is_domain_in_scope(

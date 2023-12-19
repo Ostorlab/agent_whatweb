@@ -6,6 +6,7 @@ from typing import List
 
 from ostorlab.agent.message import message
 from pytest_mock import plugin
+import pytest
 
 from agent import whatweb_agent
 
@@ -521,3 +522,49 @@ def testWhatWebAgent_withUnsupportedSchema_targetShouldNotBeScanned(
     # assert
     assert len(agent_mock) == 0
     assert subprocess_mock.call_count == 0
+
+
+def testWhatWebAgent_whenIPv4AssetDoesNotReachCIDRLimit_doesNotRaiseValueError(
+    test_agent: whatweb_agent.AgentWhatWeb,
+    mocker: plugin.MockerFixture,
+    scan_message_ipv4_with_mask16: message.Message,
+) -> None:
+    """Test the CIDR Limit in case IPV4 and the Limit is not reached."""
+    mocker.patch(
+        "ostorlab.agent.mixins.agent_persist_mixin.AgentPersistMixin.add_ip_network",
+        return_value=False,
+    )
+
+    test_agent.process(scan_message_ipv4_with_mask16)
+
+
+def testWhatWebAgent_whenIPv6AssetReachCIDRLimit_raiseValueError(
+    test_agent: whatweb_agent.AgentWhatWeb,
+    scan_message_ipv6_with_mask64: message.Message,
+) -> None:
+    """Test the CIDR Limit in case IPV6 and the Limit is reached."""
+    with pytest.raises(ValueError, match="Subnet mask below 112 is not supported."):
+        test_agent.process(scan_message_ipv6_with_mask64)
+
+
+def testWhatWebAgent_whenIPv6AssetDoesNotReachCIDRLimit_doesNotRaiseValueError(
+    test_agent: whatweb_agent.AgentWhatWeb,
+    mocker: plugin.MockerFixture,
+    scan_message_ipv6_with_mask112: message.Message,
+) -> None:
+    """Test the CIDR Limit in case IPV6 and the Limit is not reached."""
+    mocker.patch(
+        "ostorlab.agent.mixins.agent_persist_mixin.AgentPersistMixin.add_ip_network",
+        return_value=False,
+    )
+
+    test_agent.process(scan_message_ipv6_with_mask112)
+
+
+def testWhatWebAgent_whenIPAssetHasIncorrectVersion_raiseValueError(
+    test_agent: whatweb_agent.AgentWhatWeb,
+    scan_message_ipv_with_incorrect_version: message.Message,
+) -> None:
+    """Test the CIDR Limit in case IP has incorrect version."""
+    with pytest.raises(ValueError, match="Incorrect ip version 5."):
+        test_agent.process(scan_message_ipv_with_incorrect_version)
