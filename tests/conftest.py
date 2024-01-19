@@ -84,7 +84,7 @@ def ip_msg_with_port_schema_mask_2() -> m.Message:
 
 @pytest.fixture(scope="function")
 def whatweb_test_agent(
-    agent_persist_mock: Dict[Union[str, bytes], Union[str, bytes]]
+    agent_persist_mock: Dict[Union[str, bytes], Union[str, bytes]],
 ) -> whatweb_agent.AgentWhatWeb:
     """WhatWeb Agent fixture for testing purposes."""
     del agent_persist_mock
@@ -107,7 +107,7 @@ def whatweb_test_agent(
 
 @pytest.fixture(scope="function")
 def whatweb_agent_with_scope_arg(
-    agent_persist_mock: Dict[Union[str, bytes], Union[str, bytes]]
+    agent_persist_mock: Dict[Union[str, bytes], Union[str, bytes]],
 ) -> whatweb_agent.AgentWhatWeb:
     """WhatWeb Agent fixture for testing purposes."""
     del agent_persist_mock
