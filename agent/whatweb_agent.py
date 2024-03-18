@@ -1,4 +1,5 @@
 """WhatWeb Agent: Agent responsible for finger-printing a website."""
+
 import abc
 import dataclasses
 import io
