@@ -1,4 +1,5 @@
 """Pytest fixture for the whatweb agent."""
+
 import pytest
 import json
 import pathlib

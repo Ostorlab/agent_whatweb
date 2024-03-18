@@ -1,4 +1,5 @@
 """Unittests for whatweb agent."""
+
 import pathlib
 import subprocess
 import tempfile
