@@ -1,5 +1,5 @@
 Plugin.define do
-	name "ofbiz"
+	name "OFBiz"
 	authors [
 	  "Ostorlab",
 	]
