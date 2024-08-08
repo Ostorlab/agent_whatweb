@@ -13,6 +13,7 @@ RUN apk update && apk add --virtual build-dependencies build-base ruby ruby-dev 
 RUN gem install bundler
 RUN git clone https://github.com/urbanadventurer/WhatWeb.git
 WORKDIR /WhatWeb
+COPY plugins/* /WhatWeb/plugins/
 RUN bundle install
 
 COPY --from=builder /install /usr/local
