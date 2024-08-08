@@ -475,7 +475,7 @@ class AgentWhatWeb(
                         targeted_by_ransomware=False,
                         targeted_by_nation_state=False,
                     ),
-                    technical_detail=f"Found library `{library_name}`, version `{str(version)}`, "
+                    technical_detail=f"Found fingerprint `{library_name}`, version `{str(version)}`, "
                     f"of type `{fingerprint_type}` in target `{target.name}`",
                     risk_rating=vuln_mixin.RiskRating.INFO,
                     vulnerability_location=vulnerable_target_data,
@@ -498,7 +498,7 @@ class AgentWhatWeb(
                     targeted_by_ransomware=False,
                     targeted_by_nation_state=False,
                 ),
-                technical_detail=f"Found library `{library_name}` of type "
+                technical_detail=f"Found fingerprint `{library_name}` of type "
                 f"`{fingerprint_type}` in target `{target.name}`",
                 risk_rating=vuln_mixin.RiskRating.INFO,
                 vulnerability_location=vulnerable_target_data,
@@ -526,12 +526,12 @@ class AgentWhatWeb(
         if version is not None:
             msg_data["library_version"] = str(version)
             detail = (
-                f"Found library `{library_name}`, version `{str(version)}`, of type"
+                f"Found fingerprint `{library_name}`, version `{str(version)}`, of type"
             )
             detail = f"{detail} `{fingerprint_type}` in target `{target.name}`"
             msg_data["detail"] = detail
         else:
-            detail = f"Found library `{library_name}`, of type `{fingerprint_type}`"
+            detail = f"Found fingerprint `{library_name}`, of type `{fingerprint_type}`"
             detail = f"{detail} in target `{target.name}`"
             msg_data["detail"] = detail
         return msg_data

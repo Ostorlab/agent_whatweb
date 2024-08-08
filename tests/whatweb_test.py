@@ -22,7 +22,7 @@ def testWhatWebAgent_withDomainMsgAndAllChecksEnabled_emitsFingerprints(
     and validates the parsing and sending the findings to the queue.
     """
     detail = (
-        "Found library `Google-Analytics`, version `Universal`, of type `BACKEND_COMPONENT` in target "
+        "Found fingerprint `Google-Analytics`, version `Universal`, of type `BACKEND_COMPONENT` in target "
         "`ostorlab.co`"
     )
 
@@ -77,7 +77,7 @@ def testWhatWebAgent_withLinkMsgAndAllChecksEnabled_emitsFingerprints(
     The test also ensures the correct compute of the port and schema from the target link.
     """
     detail = (
-        "Found library `Google-Analytics`, version `Universal`, of type `BACKEND_COMPONENT` in target "
+        "Found fingerprint `Google-Analytics`, version `Universal`, of type `BACKEND_COMPONENT` in target "
         "`ostorlab.co`"
     )
 
@@ -130,7 +130,7 @@ def testWhatWebAgent_whenDomainMsgHasPortAndSchema_emitsFingerprints(
     The tests mocks the call to WhatWeb binary and validates the parsing and sending the findings to the queue.
     """
     detail = (
-        "Found library `Google-Analytics`, version `Universal`, of type `BACKEND_COMPONENT` in target "
+        "Found fingerprint `Google-Analytics`, version `Universal`, of type `BACKEND_COMPONENT` in target "
         "`ostorlab.co`"
     )
 
@@ -183,7 +183,7 @@ def testWhatWebAgent_withIpMsgAndAllChecksEnabled_emitsFingerprints(
     and validates the parsing and sending the findings to the queue.
     """
     detail = (
-        "Found library `lighttpd`, version `1.4.28`, of type `BACKEND_COMPONENT` in target "
+        "Found fingerprint `lighttpd`, version `1.4.28`, of type `BACKEND_COMPONENT` in target "
         "`192.168.0.76`"
     )
 
@@ -237,7 +237,7 @@ def testWhatWebAgent_whenIpMsgHasPortAndSchema_emitsFingerprints(
     The tests mocks the call to WhatWeb binary  and validates the parsing and sending the findings to the queue.
     """
     detail = (
-        "Found library `lighttpd`, version `1.4.28`, of type `BACKEND_COMPONENT` in target "
+        "Found fingerprint `lighttpd`, version `1.4.28`, of type `BACKEND_COMPONENT` in target "
         "`192.168.0.0`"
     )
 
@@ -310,7 +310,7 @@ def testWhatWebAgent_whenIpMsgHasPortAndSchemaAndMask_emitsFingerprints(
     The tests mocks the call to WhatWeb binary  and validates the parsing and sending the findings to the queue.
     """
     detail = (
-        "Found library `lighttpd`, version `1.4.28`, of type `BACKEND_COMPONENT` in target "
+        "Found fingerprint `lighttpd`, version `1.4.28`, of type `BACKEND_COMPONENT` in target "
         "`192.168.0.0`"
     )
 
@@ -456,7 +456,7 @@ def testWhatWebAgent_withDomainScopeArgAndLinkMessageInScope_emitsFingerprints(
 ) -> None:
     """Ensure the domain scope argument is enforced, and urls in the scope should be scanned."""
     detail = (
-        "Found library `Google-Analytics`, version `Universal`, of type `BACKEND_COMPONENT` in target "
+        "Found fingerprint `Google-Analytics`, version `Universal`, of type `BACKEND_COMPONENT` in target "
         "`ostorlab.co`"
     )
     mocker.patch("subprocess.run", return_value=None)
