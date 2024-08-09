@@ -569,3 +569,21 @@ def testWhatWebAgent_whenIPAssetHasIncorrectVersion_raiseValueError(
     """Test the CIDR Limit in case IP has incorrect version."""
     with pytest.raises(ValueError, match="Incorrect ip version 5."):
         test_agent.process(scan_message_ipv_with_incorrect_version)
+
+
+def testWhatWebAgent_whenSchemeIsNotHTTP_defaultToNoScheme(
+    agent_mock: List[message.Message],
+    whatweb_test_agent: whatweb_agent.AgentWhatWeb,
+    ip_tcp_message: message.Message,
+    mocker: plugin.MockerFixture,
+) -> None:
+    run_mock = mocker.patch("subprocess.run", return_value=None)
+    with tempfile.TemporaryFile() as fp:
+        mocker.patch("tempfile.NamedTemporaryFile", return_value=fp)
+        with open(f"{pathlib.Path(__file__).parent}/ip_output.json", "rb") as op:
+            fp.write(op.read())
+            fp.seek(0)
+            whatweb_test_agent.process(ip_tcp_message)
+
+            assert run_mock.call_count == 1
+            assert run_mock.call_args[0][0] == ['./whatweb', '--log-json-verbose=11', '192.168.0.0:80']

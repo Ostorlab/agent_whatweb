@@ -128,7 +128,7 @@ class IPTarget(BaseTarget):
     def target(self) -> str:
         """Prepare target."""
         url = ""
-        if self.schema is not None:
+        if self.schema is not None and self.schema in ("https", "http"):
             url += f"{self.schema}://"
 
         url += self.name
@@ -163,16 +163,18 @@ class AgentWhatWeb(
         """
         logger.info("processing message of selector : %s", message.selector)
         targets = self._prepare_targets(message)
+        logger.info("Generated targets %s", targets)
         if self._should_target_be_processed(message) is False:
             return
 
         for target in targets:
             try:
+                logger.info("Scanning target %s", target)
                 with tempfile.NamedTemporaryFile() as fp:
                     self._start_scan(target, fp.name)
                     self._parse_emit_result(target, io.BytesIO(fp.read()))
             except subprocess.CalledProcessError as e:
-                logger.error(e)
+                logger.error("Error scanning target `%s`: %s", target, e)
 
     def _prepare_targets(self, message: msg.Message) -> List[IPTarget | DomainTarget]:
         """Returns a list of target objects to be scanned."""
