@@ -586,4 +586,8 @@ def testWhatWebAgent_whenSchemeIsNotHTTP_defaultToNoScheme(
             whatweb_test_agent.process(ip_tcp_message)
 
             assert run_mock.call_count == 1
-            assert run_mock.call_args[0][0] == ['./whatweb', '--log-json-verbose=11', '192.168.0.0:80']
+            assert run_mock.call_args[0][0] == [
+                "./whatweb",
+                "--log-json-verbose=11",
+                "192.168.0.0:80",
+            ]
