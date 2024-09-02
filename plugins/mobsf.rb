@@ -9,7 +9,9 @@ Plugin.define do
 
 	matches [
         {
-            :text => "Mob<strong>SF</strong>",
+            :text => "Mob<strong>SF</strong>"
+		},
+		{
             :text => "<strong> Mob</strong>SF</span>"
         }
 	]
