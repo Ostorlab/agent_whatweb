@@ -8,11 +8,9 @@ Plugin.define do
 	website "https://www.pfsense.org/"
 
 	matches [
-        {
-            :text => "<h4>Login to pfSense</h4>",
-            :text => "<h4>Login to Netgate pfSense Plus</h4>",
-            :text => "<script src=\"/js/pfSense.js"
-        }
+		{:text => "<h4>Login to pfSense</h4>"},
+		{:text => "<h4>Login to Netgate pfSense Plus</h4>"},
+		{:text => "<script src=\"/js/pfSense.js"}
 	]
   end
 

@@ -8,10 +8,8 @@ Plugin.define do
 	website "https://github.com/MobSF/Mobile-Security-Framework-MobSF"
 
 	matches [
-        {
-            :text => "Mob<strong>SF</strong>",
-            :text => "<strong> Mob</strong>SF</span>"
-        }
+		{:text => "Mob<strong>SF</strong>"},
+		{:text => "<strong> Mob</strong>SF</span>"}
 	]
   end
 
