@@ -200,7 +200,7 @@ def testWhatWebAgent_withIpMsgAndAllChecksEnabled_emitsFingerprints(
                 for fingerprint_msg in agent_mock
             )
             assert any(
-                fingerprint_msg.data.get("schema") == "https"
+                fingerprint_msg.data.get("host") == "192.168.0.76"
                 for fingerprint_msg in agent_mock
             )
             assert any(
@@ -253,7 +253,7 @@ def testWhatWebAgent_whenIpMsgHasPortAndSchema_emitsFingerprints(
                 fingerprint_msg.data.get("port") == 80 for fingerprint_msg in agent_mock
             )
             assert any(
-                fingerprint_msg.data.get("schema") == "http"
+                fingerprint_msg.data.get("host") == "192.168.0.0"
                 for fingerprint_msg in agent_mock
             )
             assert any(
@@ -326,7 +326,7 @@ def testWhatWebAgent_whenIpMsgHasPortAndSchemaAndMask_emitsFingerprints(
                 fingerprint_msg.data.get("port") == 80 for fingerprint_msg in agent_mock
             )
             assert any(
-                fingerprint_msg.data.get("schema") == "http"
+                fingerprint_msg.data.get("host") == "192.168.0.0"
                 for fingerprint_msg in agent_mock
             )
             assert any(

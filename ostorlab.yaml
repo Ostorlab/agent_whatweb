@@ -75,6 +75,8 @@ in_selectors:
  - v3.asset.ip
 out_selectors:
  - v3.fingerprint.domain_name.service.library
+ - v3.fingerprint.ip.v4.service.library
+ - v3.fingerprint.ip.v6.service.library
  - v3.report.vulnerability
 docker_file_path: Dockerfile
 docker_build_root: .
