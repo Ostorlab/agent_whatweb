@@ -227,6 +227,60 @@ def testWhatWebAgent_withIpMsgAndAllChecksEnabled_emitsFingerprints(
             )
 
 
+def testWhatWebAgent_withIpv6MsgAndAllChecksEnabled_emitsFingerprints(
+    agent_mock: List[message.Message],
+    whatweb_test_agent: whatweb_agent.AgentWhatWeb,
+    ipv6_msg: message.Message,
+    mocker: plugin.MockerFixture,
+) -> None:
+    """Test the whatweb agent with a given target IPv6 address. The tests mocks the call to WhatWeb binary
+    and validates the parsing and sending the findings to the queue.
+    """
+    detail = (
+        "Found fingerprint `lighttpd`, version `1.4.28`, of type `BACKEND_COMPONENT` in target "
+        "`2a00:1450:4006:80c::2004`"
+    )
+
+    mocker.patch("subprocess.run", return_value=None)
+    with tempfile.TemporaryFile() as fp:
+        mocker.patch("tempfile.NamedTemporaryFile", return_value=fp)
+        with open(f"{pathlib.Path(__file__).parent}/ip_output.json", "rb") as op:
+            fp.write(op.read())
+            fp.seek(0)
+            whatweb_test_agent.process(ipv6_msg)
+            assert len(agent_mock) > 0
+            assert any(
+                fingerprint_msg.data.get("port") == 443
+                for fingerprint_msg in agent_mock
+            )
+            assert any(
+                fingerprint_msg.data.get("host") == "2a00:1450:4006:80c::2004"
+                for fingerprint_msg in agent_mock
+            )
+            assert any(
+                fingerprint_msg.data.get("library_name") == "lighttpd/1.4.28"
+                for fingerprint_msg in agent_mock
+            )
+            assert any(
+                fingerprint_msg.data.get("library_version") == "1.4.28"
+                for fingerprint_msg in agent_mock
+            )
+            assert any(
+                vuln_msg.data.get("title") == "Tech Stack Fingerprint"
+                for vuln_msg in agent_mock
+            )
+            assert any(
+                vuln_msg.data.get("risk_rating") == "INFO" for vuln_msg in agent_mock
+            )
+            assert any(
+                vuln_msg.data.get("technical_detail") == detail
+                for vuln_msg in agent_mock
+            )
+            assert any(
+                vuln_msg.data.get("security_issue") is True for vuln_msg in agent_mock
+            )
+
+
 def testWhatWebAgent_whenIpMsgHasPortAndSchema_emitsFingerprints(
     agent_mock: List[message.Message],
     whatweb_test_agent: whatweb_agent.AgentWhatWeb,
