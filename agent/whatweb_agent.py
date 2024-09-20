@@ -76,7 +76,9 @@ FINGERPRINT_TYPE = {"jquery": "JAVASCRIPT_LIBRARY"}
 
 WHATWEB_PATH = "./whatweb"
 WHATWEB_DIRECTORY = "/WhatWeb"
-LIB_SELECTOR = "v3.fingerprint.domain_name.service.library"
+DOMAIN_NAME_LIB_SELECTOR = "v3.fingerprint.domain_name.service.library"
+IP_V4_LIB_SELECTOR = "v3.fingerprint.ip.v4.service.library"
+IP_V6_LIB_SELECTOR = "v3.fingerprint.ip.v6.service.library"
 SCHEME_TO_PORT = {"http": 80, "https": 443}
 IPV4_CIDR_LIMIT = 16
 IPV6_CIDR_LIMIT = 112
@@ -462,7 +464,13 @@ class AgentWhatWeb(
                 msg_data = self._get_msg_data(
                     target, library_name, version, fingerprint_type
                 )
-                self.emit(selector=LIB_SELECTOR, data=msg_data)
+                if isinstance(target, DomainTarget):
+                    self.emit(selector=DOMAIN_NAME_LIB_SELECTOR, data=msg_data)
+                elif isinstance(target, IPTarget) and target.version == 4:
+                    self.emit(selector=IP_V4_LIB_SELECTOR, data=msg_data)
+                elif isinstance(target, IPTarget) and target.version == 6:
+                    self.emit(selector=IP_V6_LIB_SELECTOR, data=msg_data)
+
                 self.report_vulnerability(
                     entry=kb.Entry(
                         title=VULNZ_TITLE,
@@ -485,7 +493,13 @@ class AgentWhatWeb(
         else:
             # No version is found.
             msg_data = self._get_msg_data(target, library_name, None, fingerprint_type)
-            self.emit(selector=LIB_SELECTOR, data=msg_data)
+            if isinstance(target, DomainTarget):
+                self.emit(selector=DOMAIN_NAME_LIB_SELECTOR, data=msg_data)
+            elif isinstance(target, IPTarget) and target.version == 4:
+                self.emit(selector=IP_V4_LIB_SELECTOR, data=msg_data)
+            elif isinstance(target, IPTarget) and target.version == 6:
+                self.emit(selector=IP_V6_LIB_SELECTOR, data=msg_data)
+
             self.report_vulnerability(
                 entry=kb.Entry(
                     title=VULNZ_TITLE,
@@ -516,11 +530,15 @@ class AgentWhatWeb(
         """Prepare  data of the library proto message to be emited."""
         msg_data: Dict[str, Any] = {}
         if target.name is not None:
-            msg_data["name"] = target.name
+            if isinstance(target, DomainTarget):
+                msg_data["name"] = target.name
+                msg_data["schema"] = target.schema
+            elif isinstance(target, IPTarget):
+                msg_data["host"] = target.name
+                msg_data["version"] = target.version
+                msg_data["mask"] = "32" if target.version == 4 else "128"
         if target.port is not None:
             msg_data["port"] = target.port
-        if target.schema is not None:
-            msg_data["schema"] = target.schema
         if library_name is not None:
             msg_data["library_name"] = library_name
         if fingerprint_type is not None:
