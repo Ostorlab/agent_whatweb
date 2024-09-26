@@ -11,7 +11,7 @@ Plugin.define do
     {
       :search => "body",
       :regexp => /<span class="product">Virtual Traffic Manager Appliance/,
-      :name => "HILLSTONE NETWORKS Title Tag"
+      :name => "Ivanti vTM body Tag"
     },
   ]
 end
