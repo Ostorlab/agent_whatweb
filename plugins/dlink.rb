@@ -4,7 +4,7 @@ Plugin.define do
     "Ostorlab",
   ]
   version "0.1"
-  description "D-Link DIR-820L is a wireless router providing internet access and networking capabilities."
+  description "D-Link is a wireless router providing internet access and networking capabilities."
   website "http://www.dlink.com/"
 
   matches [
