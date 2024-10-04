@@ -10,7 +10,7 @@ Plugin.define do
   matches [
     {
       :search => "body",
-      :regexp => /contact draytek support if you insist to do this/i,  # Matching the error or contact warning
+      :regexp => /<title>Vigor Login Page<\/title>/i,  # Matching the error or contact warning
       :name => "DrayTek Vigor"
     },
   ]
