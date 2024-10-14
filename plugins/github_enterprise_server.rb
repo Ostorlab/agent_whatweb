@@ -1,5 +1,5 @@
 Plugin.define do
-	name "Github enterprise server"
+	name "Github Enterprise Server"
 	authors [
 	  "Ostorlab",
 	]
