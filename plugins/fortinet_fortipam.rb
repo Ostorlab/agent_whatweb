@@ -1,5 +1,5 @@
 Plugin.define do
-  name "fortinet_fortipam"
+  name "fortinet fortipam"
   authors [
     "Ostorlab",
   ]

@@ -1,5 +1,5 @@
 Plugin.define do
-  name "fortinet_fortiswitchmanager"
+  name "fortinet fortiswitchmanager"
   authors [
     "Ostorlab",
   ]
