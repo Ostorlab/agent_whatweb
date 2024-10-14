@@ -1,5 +1,5 @@
 Plugin.define do
-  name "Expedition Project"
+  name "Palo Alto Expedition Project"
   authors [
     "Ostorlab",
   ]
