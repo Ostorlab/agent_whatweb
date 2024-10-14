@@ -5,7 +5,7 @@ Plugin.define do
 	]
     version "0.1"
 	description "GitHub Enterprise Server is a self-hosted version of the GitHub platform"
-	website "https://docs.github.com/en/enterprise-server@3.14/"
+	website "https://docs.github.com/en/enterprise-server/"
 
 	matches [
         {
