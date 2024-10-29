@@ -11,7 +11,7 @@ Plugin.define do
     {
       :search => "body",
       :regexp => /<option value=.+?RAVPN/,
-      :name => "RAVPN mention in the body of the login page"
+      :name => "RAVPN is mentioned in the body of the login page"
     }
   ]
 end
