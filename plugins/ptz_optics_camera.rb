@@ -11,7 +11,7 @@ Plugin.define do
     {
       :search => "body",
       :regexp => /<script type="text\/javascript" src="dist\/ptzomidi_v2\.js"><\/script>/,
-      :name => "PTZOptics JavaScript file mention in the body of the page"
+      :name => "PTZOptics JavaScript file mentioned in the body of the page"
     }
   ]
 end
