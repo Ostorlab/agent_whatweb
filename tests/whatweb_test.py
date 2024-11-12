@@ -3,7 +3,7 @@
 import pathlib
 import subprocess
 import tempfile
-from typing import List
+from typing import List, Any
 
 from ostorlab.agent.message import message
 from pytest_mock import plugin
@@ -619,8 +619,21 @@ def testWhatWebAgent_whenIPv6AssetDoesNotReachCIDRLimit_doesNotRaiseValueError(
 def testWhatWebAgent_whenIPAssetHasIncorrectVersion_raiseValueError(
     test_agent: whatweb_agent.AgentWhatWeb,
     scan_message_ipv_with_incorrect_version: message.Message,
+    mocker: plugin.MockerFixture,
 ) -> None:
     """Test the CIDR Limit in case IP has incorrect version."""
+    mocker.patch.object(test_agent, "_should_target_be_processed", return_value=True)
+
+    def mock_prepare_ip_targets(m: message.Message) -> list[Any]:
+        version = m.data.get("version")
+        if version not in (4, 6):
+            raise ValueError(f"Incorrect ip version {version}.")
+        return []
+
+    mocker.patch.object(
+        test_agent, "_prepare_ip_targets", side_effect=mock_prepare_ip_targets
+    )
+
     with pytest.raises(ValueError, match="Incorrect ip version 5."):
         test_agent.process(scan_message_ipv_with_incorrect_version)
 
@@ -645,3 +658,51 @@ def testWhatWebAgent_whenSchemeIsNotHTTP_defaultToNoScheme(
                 "--log-json-verbose=11",
                 "192.168.0.0:80",
             ]
+
+
+def testWhatWebAgent_withIPv4AndMaskButNoVersion_shouldHandleVersionCorrectly(
+    agent_mock: List[message.Message],
+    whatweb_test_agent: whatweb_agent.AgentWhatWeb,
+    mocker: plugin.MockerFixture,
+) -> None:
+    """Ensure when receiving an IPv4 address with mask but no version specified,
+    the agent handles it correctly by inferring the version."""
+    input_selector = "v3.asset.ip.v4"
+    input_data = {"host": "80.121.155.176", "mask": "29"}
+    ip_msg = message.Message.from_data(selector=input_selector, data=input_data)
+
+    subprocess_mock = mocker.patch(
+        "subprocess.run",
+        return_value=mocker.Mock(stdout=b'{"target":"test","results":[]}'),
+    )
+
+    mock_temp_file = mocker.Mock()
+    mock_temp_file.read.return_value = b'{"target":"test","results":[]}'
+    mock_temp_file.name = "mock_file"
+    mock_tempfile = mocker.patch("tempfile.NamedTemporaryFile")
+    mock_tempfile.return_value.__enter__.return_value = mock_temp_file
+
+    whatweb_test_agent.process(ip_msg)
+
+    assert (
+        subprocess_mock.call_count == 6
+    )  # Should have scanned 6 IPs in the /29 network
+
+    expected_ips = [
+        "80.121.155.177",
+        "80.121.155.178",
+        "80.121.155.179",
+        "80.121.155.180",
+        "80.121.155.181",
+        "80.121.155.182",
+    ]
+
+    calls = subprocess_mock.call_args_list
+    assert len(calls) == len(expected_ips)
+
+    for call, expected_ip in zip(calls, expected_ips):
+        args, kwargs = call
+        command = args[0]
+        assert any(
+            expected_ip in arg for arg in command
+        ), f"Expected IP {expected_ip} not found in command {command}"
