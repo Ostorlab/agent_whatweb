@@ -5,9 +5,9 @@ import subprocess
 import tempfile
 from typing import List, Any
 
+import pytest
 from ostorlab.agent.message import message
 from pytest_mock import plugin
-import pytest
 
 from agent import whatweb_agent
 
@@ -706,3 +706,16 @@ def testWhatWebAgent_withIPv4AndMaskButNoVersion_shouldHandleVersionCorrectly(
         assert any(
             expected_ip in arg for arg in command
         ), f"Expected IP {expected_ip} not found in command {command}"
+
+
+def testWhatWebAgent_whenInvalidIPAddressIsProvided_raisesValueError(
+    whatweb_test_agent: whatweb_agent.AgentWhatWeb,
+    mocker: plugin.MockerFixture,
+) -> None:
+    """Test that a ValueError is raised when an invalid IP address is provided."""
+    input_selector = "v3.asset.ip.v4"
+    input_data = {"host": "invalid_ip", "mask": "24"}
+    ip_msg = message.Message.from_data(selector=input_selector, data=input_data)
+
+    with pytest.raises(ValueError, match="Invalid IP address: invalid_ip"):
+        whatweb_test_agent.process(ip_msg)
