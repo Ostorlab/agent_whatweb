@@ -8,11 +8,9 @@ Plugin.define do
     website "https://www.geovision.com.tw/"
   
     matches [
-      {
-        :search => "body",
-        :regexp => /<img src="img\/WebLogin\/logo.png"/i,
-        :name => "GeoVision"
-      },
+      {:text => "<img src=\"img/WebLogin/logo.png\""},
+      {:regexp => /Geovision Inc./i},
+      {:text => "<title>Geovision"}
     ]
   end
   
