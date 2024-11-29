@@ -5,7 +5,7 @@ Plugin.define do
   ]
   version "0.1"
   description "This ShareCenter™ Cloud Storage device enables you to share documents and media content such as photos, music and videos on a home network or over the Internet."
-  website " https://www.dlink.com/"
+  website "https://www.dlink.com/"
 
   matches [
     {
