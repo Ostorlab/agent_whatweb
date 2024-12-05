@@ -164,6 +164,7 @@ def test_agent() -> whatweb_agent.AgentWhatWeb:
         )
         return whatweb_agent.AgentWhatWeb(agent_definition, agent_settings)
 
+
 @pytest.fixture()
 def scan_message_ipv4_with_mask16() -> m.Message:
     """Creates a message of type v3.asset.ip.v4 to be used by the agent for testing purposes."""
