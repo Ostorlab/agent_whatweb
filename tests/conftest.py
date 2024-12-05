@@ -166,14 +166,6 @@ def test_agent() -> whatweb_agent.AgentWhatWeb:
 
 
 @pytest.fixture()
-def scan_message_ipv4_with_mask8() -> m.Message:
-    """Creates a message of type v3.asset.ip.v4 to be used by the agent for testing purposes."""
-    selector = "v3.asset.ip.v4"
-    msg_data = {"host": "192.168.1.17", "mask": "8", "version": 4}
-    return m.Message.from_data(selector, data=msg_data)
-
-
-@pytest.fixture()
 def scan_message_ipv4_with_mask16() -> m.Message:
     """Creates a message of type v3.asset.ip.v4 to be used by the agent for testing purposes."""
     selector = "v3.asset.ip.v4"
