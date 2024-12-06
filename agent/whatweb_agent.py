@@ -533,7 +533,7 @@ class AgentWhatWeb(
         version: Optional[str] = None,
         fingerprint_type: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """Prepare  data of the library proto message to be emited."""
+        """Prepare  data of the library proto message to be emitted."""
         msg_data: Dict[str, Any] = {}
         if target.name is not None:
             if isinstance(target, DomainTarget):
