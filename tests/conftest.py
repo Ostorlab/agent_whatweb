@@ -8,7 +8,7 @@ import random
 
 from ostorlab.agent import definitions as agent_definitions
 from ostorlab.runtimes import definitions as runtime_definitions
-from ostorlab.utils import defintions
+from ostorlab.utils import definitions
 from ostorlab.agent.message import message as m
 
 from agent import whatweb_agent
@@ -110,10 +110,10 @@ def whatweb_test_agent(
             key="whatweb",
             redis_url="redis://redis",
             args=[
-                defintions.Arg(
+                definitions.Arg(
                     name="schema", type="string", value=json.dumps("https").encode()
                 ),
-                defintions.Arg(
+                definitions.Arg(
                     name="port", type="number", value=json.dumps(443).encode()
                 ),
             ],
@@ -133,13 +133,13 @@ def whatweb_agent_with_scope_arg(
             key="whatweb",
             redis_url="redis://redis",
             args=[
-                defintions.Arg(
+                definitions.Arg(
                     name="schema", type="string", value=json.dumps("https").encode()
                 ),
-                defintions.Arg(
+                definitions.Arg(
                     name="port", type="number", value=json.dumps(443).encode()
                 ),
-                defintions.Arg(
+                definitions.Arg(
                     name="scope_domain_regex",
                     type="string",
                     value=json.dumps(".*ostorlab.co").encode(),
