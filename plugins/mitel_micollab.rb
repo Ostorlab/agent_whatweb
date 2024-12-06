@@ -10,7 +10,7 @@ Plugin.define do
   matches [
     {
       :search => "body",
-      :regexp => /class=["']mitel_logo["'].*src=["'].*\/portal\/decorations\/layout\/loginPage\/images\/mitel_logo\.png["'].*alt=["']Mitel["']/i,
+      :regexp => /class=.*mitel_logo\.png/i,
       :name => "Mitel MiCollab login page logo"
     },
     {
