@@ -9,7 +9,7 @@ Plugin.define do
 
   matches [
     {
-      :text => '<script src="https://unpkg.com/@solana/web3.js@'
+      :text => '@solana/web3.js'
     }
   ]
 end
