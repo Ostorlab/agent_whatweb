@@ -12,6 +12,11 @@ Plugin.define do
       :search => "headers[x-powered-by]",
       :regexp => /Next\.js/,
       :name => "x-powered-by header with Next.js"
-    }
+    },
+    {
+      :search => "body",
+      :regexp => /\/_next\/static/,
+      :name => "HTML tags containing AG_PROXY_ID"
+    },
   ]
 end
