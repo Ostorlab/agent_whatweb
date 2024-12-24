@@ -11,7 +11,7 @@ Plugin.define do
     {
       :search => "head",
       :regexp => /<title>Apache Tomcat/,
-      :name => "On-Prem License Workspace Generator Title Tag"
+      :name => "Apache Tomcat Title Tag"
     },
   ]
 end
