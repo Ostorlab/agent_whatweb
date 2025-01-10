@@ -703,9 +703,9 @@ def testWhatWebAgent_withIPv4AndMaskButNoVersion_shouldHandleVersionCorrectly(
     for call, expected_ip in zip(calls, expected_ips):
         args, kwargs = call
         command = args[0]
-        assert any(
-            expected_ip in arg for arg in command
-        ), f"Expected IP {expected_ip} not found in command {command}"
+        assert any(expected_ip in arg for arg in command), (
+            f"Expected IP {expected_ip} not found in command {command}"
+        )
 
 
 def testWhatWebAgent_whenInvalidIPAddressIsProvided_raisesValueError(
