@@ -13,5 +13,10 @@ Plugin.define do
       :regexp => /<title>USG\d+<\/title>|<title>USG FLEX \d+<\/title>/i,
       :name => "Zyxel USG or USG FLEX Title Match"
     },
+    {
+      :search => "body",
+      :regexp => /<title>.*Web-Based Configurator.*<\/title>/i,
+      :name => "Zyxel Title Login Page"
+    },
   ]
 end
