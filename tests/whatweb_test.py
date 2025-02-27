@@ -118,6 +118,11 @@ def testWhatWebAgent_withLinkMsgAndAllChecksEnabled_emitsFingerprints(
             assert any(
                 vuln_msg.data.get("security_issue") is True for vuln_msg in agent_mock
             )
+            assert any(
+                vuln_msg.data.get("dna")
+                == '{"location": {"domain_name": {"name": "ostorlab.co"}, "metadata": [{"type": "PORT", "value": "80"}]}, "vuln_data": {"detail": "Found fingerprint `cloudflare`, of type `BACKEND_COMPONENT` in target `ostorlab.co`", "library_name": "cloudflare", "library_type": "BACKEND_COMPONENT", "name": "ostorlab.co", "port": 80, "schema": "http"}}'
+                for vuln_msg in agent_mock
+            )
 
 
 def testWhatWebAgent_whenDomainMsgHasPortAndSchema_emitsFingerprints(
@@ -170,6 +175,11 @@ def testWhatWebAgent_whenDomainMsgHasPortAndSchema_emitsFingerprints(
             )
             assert any(
                 vuln_msg.data.get("security_issue") is True for vuln_msg in agent_mock
+            )
+            assert any(
+                vuln_msg.data.get("dna")
+                == '{"location": {"domain_name": {"name": "ostorlab.co"}, "metadata": [{"type": "PORT", "value": "80"}]}, "vuln_data": {"detail": "Found fingerprint `cloudflare`, of type `BACKEND_COMPONENT` in target `ostorlab.co`", "library_name": "cloudflare", "library_type": "BACKEND_COMPONENT", "name": "ostorlab.co", "port": 80, "schema": "http"}}'
+                for vuln_msg in agent_mock
             )
 
 
@@ -225,6 +235,11 @@ def testWhatWebAgent_withIpMsgAndAllChecksEnabled_emitsFingerprints(
             assert any(
                 vuln_msg.data.get("security_issue") is True for vuln_msg in agent_mock
             )
+            assert any(
+                vuln_msg.data.get("dna")
+                == '{"location": {"ipv4": {"host": "192.168.0.76", "mask": "32", "version": 4}, "metadata": [{"type": "PORT", "value": "443"}]}, "vuln_data": {"detail": "Found fingerprint `lighttpd/1.4.28`, of type `BACKEND_COMPONENT` in target `192.168.0.76`", "host": "192.168.0.76", "library_name": "lighttpd/1.4.28", "library_type": "BACKEND_COMPONENT", "mask": "32", "port": 443, "version": 4}}'
+                for vuln_msg in agent_mock
+            )
 
 
 def testWhatWebAgent_withIpv6MsgAndAllChecksEnabled_emitsFingerprints(
@@ -278,6 +293,11 @@ def testWhatWebAgent_withIpv6MsgAndAllChecksEnabled_emitsFingerprints(
             )
             assert any(
                 vuln_msg.data.get("security_issue") is True for vuln_msg in agent_mock
+            )
+            assert any(
+                vuln_msg.data.get("dna")
+                == '{"location": {"ipv6": {"host": "2a00:1450:4006:80c::2004", "mask": "128", "version": 6}, "metadata": [{"type": "PORT", "value": "443"}]}, "vuln_data": {"detail": "Found fingerprint `lighttpd/1.4.28`, of type `BACKEND_COMPONENT` in target `2a00:1450:4006:80c::2004`", "host": "2a00:1450:4006:80c::2004", "library_name": "lighttpd/1.4.28", "library_type": "BACKEND_COMPONENT", "mask": "128", "port": 443, "version": 6}}'
+                for vuln_msg in agent_mock
             )
 
 
@@ -500,6 +520,11 @@ def testWhatWebAgent_withDomainMsgAndAllChecksEnabled_emitsFingerprintsWithlocat
                 for fingerprint in agent_mock
             )
             assert subprocess_mock.mock_calls[0].args[0][2] == "https://ostorlab.co:443"
+            assert any(
+                vuln_msg.data.get("dna")
+                == '{"location": {"domain_name": {"name": "ostorlab.co"}, "metadata": [{"type": "PORT", "value": "443"}]}, "vuln_data": {"detail": "Found fingerprint `lighttpd/1.4.28`, of type `BACKEND_COMPONENT` in target `ostorlab.co`", "library_name": "lighttpd/1.4.28", "library_type": "BACKEND_COMPONENT", "name": "ostorlab.co", "port": 443, "schema": "https"}}'
+                for vuln_msg in agent_mock
+            )
 
 
 def testWhatWebAgent_withDomainScopeArgAndLinkMessageInScope_emitsFingerprints(
@@ -533,6 +558,11 @@ def testWhatWebAgent_withDomainScopeArgAndLinkMessageInScope_emitsFingerprints(
             )
             assert any(
                 vuln_msg.data.get("technical_detail") == detail
+                for vuln_msg in agent_mock
+            )
+            assert any(
+                vuln_msg.data.get("dna")
+                == '{"location": {"domain_name": {"name": "ostorlab.co"}, "metadata": [{"type": "PORT", "value": "80"}]}, "vuln_data": {"detail": "Found fingerprint `cloudflare`, of type `BACKEND_COMPONENT` in target `ostorlab.co`", "library_name": "cloudflare", "library_type": "BACKEND_COMPONENT", "name": "ostorlab.co", "port": 80, "schema": "http"}}'
                 for vuln_msg in agent_mock
             )
 

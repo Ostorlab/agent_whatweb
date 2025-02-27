@@ -477,6 +477,9 @@ class AgentWhatWeb(
                 elif isinstance(target, IPTarget) and target.version == 6:
                     self.emit(selector=IP_V6_LIB_SELECTOR, data=msg_data)
 
+                dna = _prepare_vulnerability_dna(
+                    vulnerability_location=vulnerable_target_data, vuln_data=msg_data
+                )
                 self.report_vulnerability(
                     entry=kb.Entry(
                         title=VULNZ_TITLE,
@@ -495,6 +498,7 @@ class AgentWhatWeb(
                     f"of type `{fingerprint_type}` in target `{target.name}`",
                     risk_rating=vuln_mixin.RiskRating.INFO,
                     vulnerability_location=vulnerable_target_data,
+                    dna=dna,
                 )
         else:
             # No version is found.
@@ -506,6 +510,9 @@ class AgentWhatWeb(
             elif isinstance(target, IPTarget) and target.version == 6:
                 self.emit(selector=IP_V6_LIB_SELECTOR, data=msg_data)
 
+            dna = _prepare_vulnerability_dna(
+                vulnerability_location=vulnerable_target_data, vuln_data=msg_data
+            )
             self.report_vulnerability(
                 entry=kb.Entry(
                     title=VULNZ_TITLE,
@@ -524,6 +531,7 @@ class AgentWhatWeb(
                 f"`{fingerprint_type}` in target `{target.name}`",
                 risk_rating=vuln_mixin.RiskRating.INFO,
                 vulnerability_location=vulnerable_target_data,
+                dna=dna,
             )
 
     def _get_msg_data(
@@ -561,6 +569,39 @@ class AgentWhatWeb(
             detail = f"{detail} in target `{target.name}`"
             msg_data["detail"] = detail
         return msg_data
+
+
+def _prepare_vulnerability_dna(
+    vulnerability_location: vuln_mixin.VulnerabilityLocation, vuln_data: dict[str, Any]
+) -> str:
+    """Prepare a `dna` instance with the unique_key and the aggregated reports."""
+    dna_dict = {
+        "vuln_data": vuln_data,
+    }
+    if vulnerability_location is not None:
+        dna_dict["location"] = vulnerability_location.to_dict()  # type:ignore[assignment]
+
+    dna = _sort_dict(dna_dict)
+    return json.dumps(dna, sort_keys=True)
+
+
+def _sort_dict(dictionary: dict[str, Any] | list[Any]) -> dict[str, Any] | list[Any]:
+    """Recursively sort dictionary keys and lists within.
+    Args:
+        dictionary: The dictionary to sort.
+    Returns:
+        A sorted dictionary or list.
+    """
+    if isinstance(dictionary, dict):
+        return {k: _sort_dict(v) for k, v in sorted(dictionary.items())}
+    if isinstance(dictionary, list):
+        return sorted(
+            dictionary,
+            key=lambda x: json.dumps(x, sort_keys=True)
+            if isinstance(x, dict)
+            else str(x),
+        )
+    return dictionary
 
 
 if __name__ == "__main__":
