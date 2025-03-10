@@ -10,7 +10,7 @@ Plugin.define do
   matches [
     {
       :search => "body",
-      :regexp => /<title>\s*|\sCALDERA<\/title>/i,
+      :regexp => /<title>\s*[^|]+?\|\s*CALDERA<\/title>/i,
       :name => "Caldera Framework Title Tag"
     }
   ]
