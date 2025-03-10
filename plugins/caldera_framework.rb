@@ -10,8 +10,8 @@ Plugin.define do
   matches [
     {
       :search => "body",
-      :regexp => /<title>Login\s|\sCALDERA<\/title>/i,
-      :name => "Ivanti EPM Title Tag"
+      :regexp => /<title>\s*|\sCALDERA<\/title>/i,
+      :name => "Caldera Framework Title Tag"
     }
   ]
 end
