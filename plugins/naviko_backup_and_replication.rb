@@ -4,7 +4,7 @@ Plugin.define do
     "Ostorlab",
   ]
   version "0.1"
-  description "NAKIVO Backup & Replication is a fast, reliable, and affordable data protection solution."
+  description "NAKIVO Backup & Replication is a data protection solution."
   website "https://www.nakivo.com/"
 
   matches [
