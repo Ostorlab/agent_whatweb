@@ -1,8 +1,7 @@
 Plugin.define do
   name "Craft CMS"
   authors [
-    "skeltavik",
-    "Nour Eddine Masdoufi <your-email@example.com>", # Optional, add if desired
+    "Ostorlab"
   ]
   version "0.1"
   description "Craft CMS is a flexible, user-friendly CMS for creating custom digital experiences on the web."
