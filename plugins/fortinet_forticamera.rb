@@ -1,7 +1,7 @@
 Plugin.define do
   name "Fortinet FortiCamera"
   authors [
-    "Threat Intel Platform User (Adapted by AI)"
+    "Ostorlab"
   ]
   version "0.1"
   description "FortiCameras are network-connected IP surveillance cameras that integrate with FortiRecorder NVRs and FortiCentral for centralized management."
