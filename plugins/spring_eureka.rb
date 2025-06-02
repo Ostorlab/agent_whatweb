@@ -11,8 +11,8 @@ Plugin.define do
   matches [
     {
       :search => "title",
-      :regexp => /<title>Sophos<\/title>/,
-      :name => "Sophos Title Tag"
+      :regexp => /<title>Eureka<\/title>/,
+      :name => "Eureka Title Tag"
     },
   ]
 end
