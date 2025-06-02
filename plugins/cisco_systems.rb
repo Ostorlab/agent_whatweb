@@ -1,5 +1,5 @@
 Plugin.define do
-  name "Cisco IOS XE WLC"
+  name "Cisco Systems"
   authors [
     "Ostorlab"
   ]
