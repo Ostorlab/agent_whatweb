@@ -14,16 +14,6 @@ Plugin.define do
       :name => "ISE Session Cookie"
     },
     {
-      :search => "headers[content-security-policy]",
-      :regexp => /\.cisco\.com|\.ciscospark\.com|\.wbx2\.com|\.webex\.com/i,
-      :name => "Cisco Domains in CSP Header"
-    },
-    {
-      :search => "headers[server]",
-      :regexp => /^$/i,
-      :name => "No Server Header (ISE often omits it)"
-    },
-    {
       :search => "body",
       :regexp => /Cisco Identity Services Engine/i,
       :name => "Cisco ISE String in Body"
