@@ -13,12 +13,21 @@ Plugin.define do
       :regexp => /BroadWorks/i,
       :name => "Server Header"
     },
+    {
+    :search => "body",
+    :regexp => /BroadWorks/i,
+    :name => "BroadWorks in Body"
   ]
 
   # Version detection for Cisco BroadWorks
   version [
     {
       :search => "headers[server]",
+      :regexp => /BroadWorks[\/\s]+([0-9\.]+)/i,
+      :offset => 0
+    },
+    {
+      :search => "body",
       :regexp => /BroadWorks[\/\s]+([0-9\.]+)/i,
       :offset => 0
     }
