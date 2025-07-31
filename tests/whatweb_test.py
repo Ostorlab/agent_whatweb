@@ -719,3 +719,48 @@ def testWhatWebAgent_whenInvalidIPAddressIsProvided_raisesValueError(
 
     with pytest.raises(ValueError, match="Invalid IP address: invalid_ip"):
         whatweb_test_agent.process(ip_msg)
+
+
+def testWhatWebAgent_withSAPNetWeaverDetection_emitsFingerprints(
+    agent_mock: List[message.Message],
+    whatweb_test_agent: whatweb_agent.AgentWhatWeb,
+    domain_msg: message.Message,
+    mocker: plugin.MockerFixture,
+) -> None:
+    """Test the whatweb agent with a target that has SAP NetWeaver server. 
+    The test mocks the call to WhatWeb binary and validates the parsing and 
+    emission of SAP NetWeaver fingerprint findings.
+    """
+    detail = (
+        "Found fingerprint `SAP NetWeaver`, version `7.45`, of type `BACKEND_COMPONENT` in target "
+        "`ostorlab.co`"
+    )
+    mocker.patch("subprocess.run", return_value=None)
+    with tempfile.TemporaryFile() as fp:
+        mocker.patch("tempfile.NamedTemporaryFile", return_value=fp)
+        with open(f"{pathlib.Path(__file__).parent}/sap_output.json", "rb") as op:
+            fp.write(op.read())
+            fp.seek(0)
+
+            whatweb_test_agent.process(domain_msg)
+
+            assert len(agent_mock) > 0
+            assert any(
+                fingerprint_msg.data.get("library_name") == "SAP NetWeaver"
+                for fingerprint_msg in agent_mock
+            )
+            assert any(
+                fingerprint_msg.data.get("library_version") == "7.45"
+                for fingerprint_msg in agent_mock
+            )
+            assert any(
+                vuln_msg.data.get("title") == "Tech Stack Fingerprint"
+                for vuln_msg in agent_mock
+            )
+            assert any(
+                vuln_msg.data.get("risk_rating") == "INFO" for vuln_msg in agent_mock
+            )
+            assert any(
+                vuln_msg.data.get("technical_detail") == detail
+                for vuln_msg in agent_mock
+            )
