@@ -17,6 +17,7 @@ Plugin.define do
     :search => "body",
     :regexp => /BroadWorks/i,
     :name => "BroadWorks in Body"
+    },
   ]
 
   # Version detection for Cisco BroadWorks
