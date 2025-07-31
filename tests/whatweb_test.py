@@ -3,7 +3,7 @@
 import pathlib
 import subprocess
 import tempfile
-from typing import Any, List
+from typing import Any
 
 import pytest
 from ostorlab.agent.message import message
@@ -767,13 +767,13 @@ def testWhatWebAgent_withSAPNetWeaverDetection_emitsFingerprints(
 
 
 def testWhatWebAgent_withCiscoBroadWorksDetection_emitsFingerprints(
-    agent_mock: List[message.Message],
+    agent_mock: list[message.Message],
     whatweb_test_agent: whatweb_agent.AgentWhatWeb,
     domain_msg: message.Message,
     mocker: plugin.MockerFixture,
 ) -> None:
-    """Test the whatweb agent with a target that has Cisco BroadWorks server. 
-    The test mocks the call to WhatWeb binary and validates the parsing and 
+    """Test the whatweb agent with a target that has Cisco BroadWorks server.
+    The test mocks the call to WhatWeb binary and validates the parsing and
     emission of Cisco BroadWorks fingerprint findings.
     """
     detail = (
@@ -784,12 +784,14 @@ def testWhatWebAgent_withCiscoBroadWorksDetection_emitsFingerprints(
     mocker.patch("subprocess.run", return_value=None)
     with tempfile.TemporaryFile() as fp:
         mocker.patch("tempfile.NamedTemporaryFile", return_value=fp)
-        with open(f"{pathlib.Path(__file__).parent}/broadworks_output.json", "rb") as op:
+        with open(
+            f"{pathlib.Path(__file__).parent}/broadworks_output.json", "rb"
+        ) as op:
             fp.write(op.read())
             fp.seek(0)
 
             whatweb_test_agent.process(domain_msg)
-            
+
             assert len(agent_mock) > 0
             assert any(
                 fingerprint_msg.data.get("library_name") == "Cisco BroadWorks"
