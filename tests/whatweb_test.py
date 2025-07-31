@@ -3,7 +3,7 @@
 import pathlib
 import subprocess
 import tempfile
-from typing import List, Any
+from typing import Any
 
 import pytest
 from ostorlab.agent.message import message
@@ -13,7 +13,7 @@ from agent import whatweb_agent
 
 
 def testWhatWebAgent_withDomainMsgAndAllChecksEnabled_emitsFingerprints(
-    agent_mock: List[message.Message],
+    agent_mock: list[message.Message],
     whatweb_test_agent: whatweb_agent.AgentWhatWeb,
     domain_msg: message.Message,
     mocker: plugin.MockerFixture,
@@ -67,7 +67,7 @@ def testWhatWebAgent_withDomainMsgAndAllChecksEnabled_emitsFingerprints(
 
 
 def testWhatWebAgent_withLinkMsgAndAllChecksEnabled_emitsFingerprints(
-    agent_mock: List[message.Message],
+    agent_mock: list[message.Message],
     whatweb_test_agent: whatweb_agent.AgentWhatWeb,
     link_msg: message.Message,
     mocker: plugin.MockerFixture,
@@ -121,7 +121,7 @@ def testWhatWebAgent_withLinkMsgAndAllChecksEnabled_emitsFingerprints(
 
 
 def testWhatWebAgent_whenDomainMsgHasPortAndSchema_emitsFingerprints(
-    agent_mock: List[message.Message],
+    agent_mock: list[message.Message],
     whatweb_test_agent: whatweb_agent.AgentWhatWeb,
     domain_msg_with_port_and_schema: message.Message,
     mocker: plugin.MockerFixture,
@@ -174,7 +174,7 @@ def testWhatWebAgent_whenDomainMsgHasPortAndSchema_emitsFingerprints(
 
 
 def testWhatWebAgent_withIpMsgAndAllChecksEnabled_emitsFingerprints(
-    agent_mock: List[message.Message],
+    agent_mock: list[message.Message],
     whatweb_test_agent: whatweb_agent.AgentWhatWeb,
     ip_msg: message.Message,
     mocker: plugin.MockerFixture,
@@ -228,7 +228,7 @@ def testWhatWebAgent_withIpMsgAndAllChecksEnabled_emitsFingerprints(
 
 
 def testWhatWebAgent_withIpv6MsgAndAllChecksEnabled_emitsFingerprints(
-    agent_mock: List[message.Message],
+    agent_mock: list[message.Message],
     whatweb_test_agent: whatweb_agent.AgentWhatWeb,
     ipv6_msg: message.Message,
     mocker: plugin.MockerFixture,
@@ -282,7 +282,7 @@ def testWhatWebAgent_withIpv6MsgAndAllChecksEnabled_emitsFingerprints(
 
 
 def testWhatWebAgent_whenIpMsgHasPortAndSchema_emitsFingerprints(
-    agent_mock: List[message.Message],
+    agent_mock: list[message.Message],
     whatweb_test_agent: whatweb_agent.AgentWhatWeb,
     ip_msg_with_port_and_schema: message.Message,
     mocker: plugin.MockerFixture,
@@ -335,7 +335,7 @@ def testWhatWebAgent_whenIpMsgHasPortAndSchema_emitsFingerprints(
 
 
 def testAgentWhatWeb_whenAssetAlreadyScaned_doNothing(
-    agent_mock: List[message.Message],
+    agent_mock: list[message.Message],
     whatweb_test_agent: whatweb_agent.AgentWhatWeb,
     domain_msg: message.Message,
     mocker: plugin.MockerFixture,
@@ -355,7 +355,7 @@ def testAgentWhatWeb_whenAssetAlreadyScaned_doNothing(
 
 
 def testWhatWebAgent_whenIpMsgHasPortAndSchemaAndMask_emitsFingerprints(
-    agent_mock: List[message.Message],
+    agent_mock: list[message.Message],
     whatweb_test_agent: whatweb_agent.AgentWhatWeb,
     ip_msg_with_port_schema_mask: message.Message,
     mocker: plugin.MockerFixture,
@@ -412,7 +412,7 @@ def testWhatWebAgent_whenIpMsgHasPortAndSchemaAndMask_emitsFingerprints(
 
 
 def testWhatWebAgent_whenWhatWebReturnsError_ContinueProcessing(
-    agent_mock: List[message.Message],
+    agent_mock: list[message.Message],
     whatweb_test_agent: whatweb_agent.AgentWhatWeb,
     ip_msg_with_port_schema_mask: message.Message,
     mocker: plugin.MockerFixture,
@@ -439,7 +439,7 @@ def testWhatWebAgent_whenWhatWebReturnsError_ContinueProcessing(
 
 
 def testWhatWebAgent_withIpMsgAndAllChecksEnabled_emitsFingerprintsWithlocation(
-    agent_mock: List[message.Message],
+    agent_mock: list[message.Message],
     whatweb_test_agent: whatweb_agent.AgentWhatWeb,
     ip_msg: message.Message,
     mocker: plugin.MockerFixture,
@@ -471,7 +471,7 @@ def testWhatWebAgent_withIpMsgAndAllChecksEnabled_emitsFingerprintsWithlocation(
 
 
 def testWhatWebAgent_withDomainMsgAndAllChecksEnabled_emitsFingerprintsWithlocation(
-    agent_mock: List[message.Message],
+    agent_mock: list[message.Message],
     whatweb_test_agent: whatweb_agent.AgentWhatWeb,
     domain_msg: message.Message,
     mocker: plugin.MockerFixture,
@@ -503,7 +503,7 @@ def testWhatWebAgent_withDomainMsgAndAllChecksEnabled_emitsFingerprintsWithlocat
 
 
 def testWhatWebAgent_withDomainScopeArgAndLinkMessageInScope_emitsFingerprints(
-    agent_mock: List[message.Message],
+    agent_mock: list[message.Message],
     whatweb_agent_with_scope_arg: whatweb_agent.AgentWhatWeb,
     link_msg: message.Message,
     mocker: plugin.MockerFixture,
@@ -538,7 +538,7 @@ def testWhatWebAgent_withDomainScopeArgAndLinkMessageInScope_emitsFingerprints(
 
 
 def testWhatWebAgent_withDomainScopeArgAndLinkMessageNotInScope_targetShouldNotBeScanned(
-    agent_mock: List[message.Message],
+    agent_mock: list[message.Message],
     whatweb_agent_with_scope_arg: whatweb_agent.AgentWhatWeb,
     mocker: plugin.MockerFixture,
 ) -> None:
@@ -560,7 +560,7 @@ def testWhatWebAgent_withDomainScopeArgAndLinkMessageNotInScope_targetShouldNotB
 
 
 def testWhatWebAgent_withUnsupportedSchema_targetShouldNotBeScanned(
-    agent_mock: List[message.Message],
+    agent_mock: list[message.Message],
     whatweb_test_agent: whatweb_agent.AgentWhatWeb,
     mocker: plugin.MockerFixture,
 ) -> None:
@@ -639,7 +639,7 @@ def testWhatWebAgent_whenIPAssetHasIncorrectVersion_raiseValueError(
 
 
 def testWhatWebAgent_whenSchemeIsNotHTTP_defaultToNoScheme(
-    agent_mock: List[message.Message],
+    agent_mock: list[message.Message],
     whatweb_test_agent: whatweb_agent.AgentWhatWeb,
     ip_tcp_message: message.Message,
     mocker: plugin.MockerFixture,
@@ -661,7 +661,7 @@ def testWhatWebAgent_whenSchemeIsNotHTTP_defaultToNoScheme(
 
 
 def testWhatWebAgent_withIPv4AndMaskButNoVersion_shouldHandleVersionCorrectly(
-    agent_mock: List[message.Message],
+    agent_mock: list[message.Message],
     whatweb_test_agent: whatweb_agent.AgentWhatWeb,
     mocker: plugin.MockerFixture,
 ) -> None:
@@ -722,13 +722,13 @@ def testWhatWebAgent_whenInvalidIPAddressIsProvided_raisesValueError(
 
 
 def testWhatWebAgent_withSAPNetWeaverDetection_emitsFingerprints(
-    agent_mock: List[message.Message],
+    agent_mock: list[message.Message],
     whatweb_test_agent: whatweb_agent.AgentWhatWeb,
     domain_msg: message.Message,
     mocker: plugin.MockerFixture,
 ) -> None:
-    """Test the whatweb agent with a target that has SAP NetWeaver server. 
-    The test mocks the call to WhatWeb binary and validates the parsing and 
+    """Test the whatweb agent with a target that has SAP NetWeaver server.
+    The test mocks the call to WhatWeb binary and validates the parsing and
     emission of SAP NetWeaver fingerprint findings.
     """
     detail = (
