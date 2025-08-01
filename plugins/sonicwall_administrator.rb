@@ -14,7 +14,7 @@ Plugin.define do
     },
     {
       :search => "head",
-      :regexp => /<meta name="SonicWall Administrator" content="Copyright 2004 \(c\) SonicWall, Inc. All rights reserved.">/,
+      :regexp => /<meta name="SonicWall Administrator" content="\(c\) SonicWall, Inc. All rights reserved.">/,
       :name => "SonicWall Meta Tag"
     },
   ]
