@@ -812,3 +812,52 @@ def testWhatWebAgent_withCiscoBroadWorksDetection_emitsFingerprints(
                 vuln_msg.data.get("technical_detail") == detail
                 for vuln_msg in agent_mock
             )
+
+
+def testWhatWebAgent_withLinkMsgDetectsPlex_emitsPlexFingerprints(
+    agent_mock: list[message.Message],
+    whatweb_test_agent: whatweb_agent.AgentWhatWeb,
+    link_msg: message.Message,
+    mocker: plugin.MockerFixture,
+) -> None:
+    """Test the whatweb agent detection of Plex Media Server via link message.
+    The tests mocks the call to WhatWeb binary and validates the parsing
+    and sending the Plex fingerprint findings to the queue with correct port/schema extraction.
+    """
+    detail = "Found fingerprint `Plex Media Server` of type `BACKEND_COMPONENT` in target `ostorlab.co`"
+
+    mocker.patch("subprocess.run", return_value=None)
+    with tempfile.TemporaryFile() as fp:
+        mocker.patch("tempfile.NamedTemporaryFile", return_value=fp)
+        with open(f"{pathlib.Path(__file__).parent}/plex_output.json", "rb") as op:
+            fp.write(op.read())
+            fp.seek(0)
+
+            whatweb_test_agent.process(link_msg)
+
+            assert len(agent_mock) > 0
+            assert any(
+                fingerprint_msg.data.get("port") == 80 for fingerprint_msg in agent_mock
+            )
+            assert any(
+                fingerprint_msg.data.get("schema") == "http"
+                for fingerprint_msg in agent_mock
+            )
+            assert any(
+                fingerprint_msg.data.get("library_name") == "Plex Media Server"
+                for fingerprint_msg in agent_mock
+            )
+            assert any(
+                vuln_msg.data.get("title") == "Tech Stack Fingerprint"
+                for vuln_msg in agent_mock
+            )
+            assert any(
+                vuln_msg.data.get("risk_rating") == "INFO" for vuln_msg in agent_mock
+            )
+            assert any(
+                vuln_msg.data.get("technical_detail") == detail
+                for vuln_msg in agent_mock
+            )
+            assert any(
+                vuln_msg.data.get("security_issue") is True for vuln_msg in agent_mock
+            )
