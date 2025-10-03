@@ -24,4 +24,21 @@ Plugin.define do
       :name => "Adminer Footer Branding with Version"
     }
   ]
+    version [
+    {
+      :search => "body",
+      :version => /adminer\.php\?file=default\.css&amp;version=([0-9.]+)/i,
+      :name => "Adminer Version (CSS)"
+    },
+    {
+      :search => "body",
+      :version => /adminer\.php\?file=functions\.js&amp;version=([0-9.]+)/i,
+      :name => "Adminer Version (JS)"
+    },
+    {
+      :search => "body",
+      :version => /<span class='version'>([0-9.]+)/i,
+      :name => "Adminer Version (Footer)"
+    }
+  ]
 end
