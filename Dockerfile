@@ -5,6 +5,7 @@ RUN apk add build-base
 RUN mkdir /install
 WORKDIR /install
 COPY requirement.txt /requirement.txt
+RUN pip install --upgrade pip
 RUN pip install --prefix=/install -r /requirement.txt
 
 
