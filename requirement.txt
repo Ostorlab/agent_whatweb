@@ -1,4 +1,4 @@
 ostorlab[agent]
 rich
 mcp
-pydantic_ai[google]
+pydantic
