@@ -2,7 +2,6 @@
 
 import logging
 
-import click
 from mcp.server import fastmcp
 
 
@@ -22,7 +21,6 @@ def run() -> None:
     mcp.run(transport="streamable-http")
 
 
-@click.command()
 def main() -> None:
     """Entry point for the WhatWeb MCP server."""
     run()
