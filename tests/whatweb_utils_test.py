@@ -209,9 +209,7 @@ def testRunWhatWebScan_whenSubprocessFails_cleansUpFile(
     mocker: plugin.MockerFixture,
 ) -> None:
     """Test run_whatweb_scan cleans up file even when subprocess fails."""
-    mocker.patch(
-        "subprocess.run", side_effect=subprocess.CalledProcessError(1, "cmd")
-    )
+    mocker.patch("subprocess.run", side_effect=subprocess.CalledProcessError(1, "cmd"))
     mock_temp = mocker.patch("tempfile.NamedTemporaryFile")
     mock_temp.return_value.__enter__.return_value.name = "/tmp/test"
     mocker.patch("os.path.exists", return_value=True)

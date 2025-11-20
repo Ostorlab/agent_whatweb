@@ -136,7 +136,7 @@ class AgentWhatWeb(
             message:  The message to process from ostorlab runtime.
         """
         if self._should_start_mcp_server is True:
-            return None
+            return
 
         logger.info("processing message of selector : %s", message.selector)
         targets = self._prepare_targets(message)

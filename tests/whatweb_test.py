@@ -886,6 +886,5 @@ def testWhatWebAgent_whenMCPServerEnabled_startsServerAndSkipsProcessing(
     whatweb_agent_with_mcp_server.start()
 
     assert mcp_run_mock.call_count == 1
-    result = whatweb_agent_with_mcp_server.process(domain_msg)
-    assert result is None
+    whatweb_agent_with_mcp_server.process(domain_msg)
     assert len(agent_mock) == 0
