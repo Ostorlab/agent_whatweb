@@ -1,7 +1,7 @@
 """Shared definitions and constants for WhatWeb agent and tools."""
 
-WHATWEB_PATH = "/usr/bin/whatweb"
-WHATWEB_DIRECTORY = "/usr/share/whatweb"
+WHATWEB_PATH = "./whatweb"
+WHATWEB_DIRECTORY = "/WhatWeb"
 
 BLACKLISTED_PLUGINS = [
     "X-Frame-Options",
