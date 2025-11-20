@@ -7,8 +7,8 @@ import pytest
 from pytest_mock import plugin
 
 from agent import definitions
-from agent import whatweb_mcp_server
 from agent import whatweb_utils
+from mcp_server.tools import whatweb_scan as whatweb_scan_tool
 
 
 def testWhatwebScan_whenTargetIsValid_returnsFingerprints(
@@ -20,7 +20,7 @@ def testWhatwebScan_whenTargetIsValid_returnsFingerprints(
 
     mocker.patch("agent.whatweb_utils.run_whatweb_scan", return_value=mock_output)
 
-    result = whatweb_mcp_server.whatweb_scan.fn(target="ostorlab.co")
+    result = whatweb_scan_tool.whatweb_scan(target="ostorlab.co")
 
     assert result.target_url == "https://ostorlab.co:443"
     assert len(result.fingerprints) > 0
@@ -41,7 +41,7 @@ def testWhatwebScan_whenTargetIsURL_parsesCorrectly(
 
     mocker.patch("agent.whatweb_utils.run_whatweb_scan", return_value=mock_output)
 
-    result = whatweb_mcp_server.whatweb_scan.fn(target="http://ostorlab.co:80")
+    result = whatweb_scan_tool.whatweb_scan(target="http://ostorlab.co:80")
 
     assert result.target_url == "http://ostorlab.co:80"
     assert len(result.fingerprints) > 0
@@ -56,7 +56,7 @@ def testWhatwebScan_whenSchemeIsHttp_usesPort80(
 
     mocker.patch("agent.whatweb_utils.run_whatweb_scan", return_value=mock_output)
 
-    result = whatweb_mcp_server.whatweb_scan.fn(target="ostorlab.co", scheme="http")
+    result = whatweb_scan_tool.whatweb_scan(target="ostorlab.co", scheme="http")
 
     assert result.target_url == "http://ostorlab.co:80"
 
@@ -70,7 +70,7 @@ def testWhatwebScan_whenSchemeIsHttps_usesPort443(
 
     mocker.patch("agent.whatweb_utils.run_whatweb_scan", return_value=mock_output)
 
-    result = whatweb_mcp_server.whatweb_scan.fn(target="ostorlab.co", scheme="https")
+    result = whatweb_scan_tool.whatweb_scan(target="ostorlab.co", scheme="https")
 
     assert result.target_url == "https://ostorlab.co:443"
 
@@ -84,7 +84,7 @@ def testWhatwebScan_whenCustomPort_usesCustomPort(
 
     mocker.patch("agent.whatweb_utils.run_whatweb_scan", return_value=mock_output)
 
-    result = whatweb_mcp_server.whatweb_scan.fn(
+    result = whatweb_scan_tool.whatweb_scan(
         target="ostorlab.co", port=8080, scheme="http"
     )
 
@@ -100,7 +100,7 @@ def testWhatwebScan_whenBlacklistedPlugins_filtersThemOut(
 
     mocker.patch("agent.whatweb_utils.run_whatweb_scan", return_value=mock_output)
 
-    result = whatweb_mcp_server.whatweb_scan.fn(target="ostorlab.co")
+    result = whatweb_scan_tool.whatweb_scan(target="ostorlab.co")
 
     assert not any(
         fp.name in definitions.BLACKLISTED_PLUGINS for fp in result.fingerprints
@@ -116,7 +116,7 @@ def testWhatwebScan_whenIPTarget_scansSuccessfully(
 
     mocker.patch("agent.whatweb_utils.run_whatweb_scan", return_value=mock_output)
 
-    result = whatweb_mcp_server.whatweb_scan.fn(target="192.168.0.76")
+    result = whatweb_scan_tool.whatweb_scan(target="192.168.0.76")
 
     assert result.target_url == "https://192.168.0.76:443"
     assert len(result.fingerprints) > 0
@@ -132,7 +132,7 @@ def testWhatwebScan_whenScanFails_returnsEmptyResult(
         side_effect=subprocess.CalledProcessError(1, "cmd"),
     )
 
-    result = whatweb_mcp_server.whatweb_scan.fn(target="ostorlab.co")
+    result = whatweb_scan_tool.whatweb_scan(target="ostorlab.co")
 
     assert result.target_url == "ostorlab.co"
     assert len(result.fingerprints) == 0
@@ -143,7 +143,7 @@ def testWhatwebScan_whenUnsupportedScheme_raisesValueError(
 ) -> None:
     """Test whatweb_scan raises ValueError for unsupported schemes."""
     with pytest.raises(ValueError, match="Unsupported scheme"):
-        whatweb_mcp_server.whatweb_scan.fn(target="ostorlab.co", scheme="ftp")
+        whatweb_scan_tool.whatweb_scan(target="ostorlab.co", scheme="ftp")
 
 
 def testWhatwebScan_whenEmptyOutput_returnsEmptyFingerprints(
@@ -152,7 +152,7 @@ def testWhatwebScan_whenEmptyOutput_returnsEmptyFingerprints(
     """Test whatweb_scan handles empty output gracefully."""
     mocker.patch("agent.whatweb_utils.run_whatweb_scan", return_value=b"")
 
-    result = whatweb_mcp_server.whatweb_scan.fn(target="ostorlab.co")
+    result = whatweb_scan_tool.whatweb_scan(target="ostorlab.co")
 
     assert result.target_url == "https://ostorlab.co:443"
     assert len(result.fingerprints) == 0

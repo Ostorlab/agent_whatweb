@@ -12,6 +12,8 @@ import tempfile
 from typing import List, Optional, Dict, Any
 from urllib import parse
 
+from agent.mcp_server import server as mcp_server
+
 from ostorlab.agent import agent
 from ostorlab.agent import definitions as agent_definitions
 from ostorlab.agent.kb import kb
@@ -116,6 +118,16 @@ class AgentWhatWeb(
         vuln_mixin.AgentReportVulnMixin.__init__(self)
         persist_mixin.AgentPersistMixin.__init__(self, agent_settings)
         self._scope_domain_regex: Optional[str] = self.args.get("scope_domain_regex")
+        self._should_start_mcp_server: bool = self.args.get(
+            "should_start_mcp_server", False
+        )
+
+    def start(self) -> None:
+        """Starts the agent and the MCP server if configured to do so."""
+        if self._should_start_mcp_server is True:
+            logger.info("Starting WhatWeb MCP server...")
+            mcp_server.run()
+            logger.info("WhatWeb MCP server started.")
 
     def process(self, message: msg.Message) -> None:
         """Starts a whatweb scan, wait for the scan to finish,
@@ -124,6 +136,9 @@ class AgentWhatWeb(
         Args:
             message:  The message to process from ostorlab runtime.
         """
+        if self._should_start_mcp_server is True:
+            return None
+
         logger.info("processing message of selector : %s", message.selector)
         targets = self._prepare_targets(message)
         logger.info("Generated targets %s", targets)

@@ -1,41 +1,17 @@
-"""WhatWeb MCP Server - Exposes WhatWeb fingerprinting as MCP tools."""
+"""WhatWeb scan tool implementation."""
 
 import logging
 import subprocess
 
-import fastmcp
-import pydantic
-
 from agent import definitions
 from agent import whatweb_utils
+from agent.mcp_server import models
+from agent.mcp_server import server as mcp_server
+
 
 logger = logging.getLogger(__name__)
 
-mcp = fastmcp.FastMCP("WhatWeb Fingerprinting Server")
-
-
-class Fingerprint(pydantic.BaseModel):
-    """Represents a detected technology fingerprint."""
-
-    name: str = pydantic.Field(..., description="The name of the detected technology.")
-    version: str | None = pydantic.Field(
-        None, description="The version of the detected technology, if available."
-    )
-    type: str = pydantic.Field(
-        ...,
-        description="The type of technology (e.g., BACKEND_COMPONENT, JAVASCRIPT_LIBRARY).",
-    )
-
-
-class ScanResult(pydantic.BaseModel):
-    """Represents the result of a WhatWeb scan."""
-
-    target_url: str = pydantic.Field(
-        ..., description="The target URL that was scanned."
-    )
-    fingerprints: list[Fingerprint] = pydantic.Field(
-        [], description="List of detected technology fingerprints."
-    )
+mcp = mcp_server.mcp
 
 
 @mcp.tool()
@@ -44,11 +20,19 @@ def whatweb_scan(
     port: int | None = None,
     scheme: str | None = None,
     plugins: str | None = None,
-) -> ScanResult:
+) -> models.ScanResult:
     """Scan a web target to identify technologies and fingerprints.
 
     Args:
-        target: The target to scan (domain, URL, or IP address).
+        target: The target to scan (domain, URL, or                             0x7a9bd9882720> (id:
+                             134809788098336)
+                    INFO     whatweb_scan imported in __init__.py:10
+                             tools/__init__.py
+                    INFO     Tools imported             server.py:22
+                             successfully
+                    INFO     Starting MCP server with   server.py:33
+                             transport: streamable-http
+                    INFO     Registered tools: [] IP address).
         port: Optional port number to use (defaults to 80 for http, 443 for https).
         scheme: Optional URL scheme (http or https). Defaults to https.
         plugins: Optional comma-separated list of plugins (e.g., "django,wordpress").
@@ -70,7 +54,7 @@ def whatweb_scan(
         fingerprint_dicts = whatweb_utils.parse_whatweb_output(output_bytes)
 
         seen_fingerprints: set[tuple[str, str | None, str]] = set()
-        unique_fingerprints: list[Fingerprint] = []
+        unique_fingerprints: list[models.Fingerprint] = []
 
         for fp in fingerprint_dicts:
             fp_name = fp["name"]
@@ -82,22 +66,20 @@ def whatweb_scan(
             if key not in seen_fingerprints:
                 seen_fingerprints.add(key)
                 unique_fingerprints.append(
-                    Fingerprint(
+                    models.Fingerprint(
                         name=fp_name,
                         version=fp["version"],
                         type=fp_type,
                     )
                 )
 
-        return ScanResult(target_url=target_url, fingerprints=unique_fingerprints)
+        return models.ScanResult(
+            target_url=target_url, fingerprints=unique_fingerprints
+        )
 
     except subprocess.CalledProcessError as e:
         logger.error("WhatWeb scan failed for target %s: %s", target, e)
-        return ScanResult(target_url=target, fingerprints=[])
+        return models.ScanResult(target_url=target, fingerprints=[])
     except ValueError as e:
         logger.error("Invalid target configuration: %s", e)
         raise
-
-
-if __name__ == "__main__":
-    mcp.run(transport="streamable-http", host="0.0.0.0", port=8000)
