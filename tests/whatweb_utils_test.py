@@ -126,7 +126,9 @@ def testParseWhatwebOutput_whenEmptyPluginData_stillAddsEntry() -> None:
 
 def testParseWhatwebOutput_whenOnlyStringInMetadata_usesAsName() -> None:
     """Test parse_whatweb_output uses string field as name."""
-    test_output = b'["http://test.com",200,[["HTTPServer",[{"string":"CustomServer"}]]]]'
+    test_output = (
+        b'["http://test.com",200,[["HTTPServer",[{"string":"CustomServer"}]]]]'
+    )
 
     result = whatweb_utils.parse_whatweb_output(test_output)
 
