@@ -8,7 +8,7 @@ from pytest_mock import plugin
 
 from agent import definitions
 from agent import whatweb_utils
-from mcp_server.tools import whatweb_scan as whatweb_scan_tool
+from agent.mcp_server.tools import whatweb_scan as whatweb_scan_tool
 
 
 def testWhatwebScan_whenTargetIsValid_returnsFingerprints(
