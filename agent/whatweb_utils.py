@@ -44,12 +44,11 @@ def normalize_target(
     return url
 
 
-def run_whatweb_scan(target_url: str, plugins: list[str] | None = None) -> bytes:
+def run_whatweb_scan(target_url: str) -> bytes:
     """Run WhatWeb binary and return raw output.
 
     Args:
         target_url: The URL to scan
-        plugins: Optional list of plugin names to use (e.g., ['django', 'wordpress'])
     """
     with tempfile.NamedTemporaryFile(delete=False) as fp:
         output_file = fp.name
@@ -58,12 +57,8 @@ def run_whatweb_scan(target_url: str, plugins: list[str] | None = None) -> bytes
         whatweb_command = [
             definitions.WHATWEB_PATH,
             f"--log-json-verbose={output_file}",
+            target_url,
         ]
-
-        if plugins is not None and len(plugins) > 0:
-            whatweb_command.append(f"--plugins={','.join(plugins)}")
-
-        whatweb_command.append(target_url)
 
         subprocess.run(whatweb_command, cwd=definitions.WHATWEB_DIRECTORY, check=True)
 

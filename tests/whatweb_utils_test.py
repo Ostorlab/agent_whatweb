@@ -1,6 +1,9 @@
 """Unit tests for whatweb_utils module."""
 
+import subprocess
+
 import pytest
+from pytest_mock import plugin
 
 from agent import whatweb_utils
 
@@ -183,3 +186,38 @@ def testNormalizeTarget_whenSchemeUnsupported_raisesValueError() -> None:
     """Test normalize_target raises error for unsupported scheme parameter."""
     with pytest.raises(ValueError, match="Unsupported scheme: ftp"):
         whatweb_utils.normalize_target("example.com", scheme="ftp")
+
+
+def testRunWhatWebScan_whenFileDoesNotExist_doesNotCallUnlink(
+    mocker: plugin.MockerFixture,
+) -> None:
+    """Test run_whatweb_scan skips unlink when file doesn't exist."""
+    mocker.patch("subprocess.run")
+    mock_temp = mocker.patch("tempfile.NamedTemporaryFile")
+    mock_temp.return_value.__enter__.return_value.name = "/tmp/test"
+    mocker.patch("builtins.open", mocker.mock_open(read_data=b"test"))
+    mocker.patch("os.path.exists", return_value=False)
+    mock_unlink = mocker.patch("os.unlink")
+
+    result = whatweb_utils.run_whatweb_scan("https://example.com")
+
+    assert result == b"test"
+    assert mock_unlink.call_count == 0
+
+
+def testRunWhatWebScan_whenSubprocessFails_cleansUpFile(
+    mocker: plugin.MockerFixture,
+) -> None:
+    """Test run_whatweb_scan cleans up file even when subprocess fails."""
+    mocker.patch(
+        "subprocess.run", side_effect=subprocess.CalledProcessError(1, "cmd")
+    )
+    mock_temp = mocker.patch("tempfile.NamedTemporaryFile")
+    mock_temp.return_value.__enter__.return_value.name = "/tmp/test"
+    mocker.patch("os.path.exists", return_value=True)
+    mock_unlink = mocker.patch("os.unlink")
+
+    with pytest.raises(subprocess.CalledProcessError):
+        whatweb_utils.run_whatweb_scan("https://example.com")
+
+    assert mock_unlink.call_count == 1

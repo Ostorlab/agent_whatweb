@@ -30,8 +30,6 @@ def fingerprint(
     Returns:
         Scan results containing detected technology fingerprints.
     """
-    plugin_list = None
-
     if scheme is None:
         scheme = "https"
 
@@ -40,7 +38,7 @@ def fingerprint(
 
     try:
         target_url = whatweb_utils.normalize_target(target, port, scheme)
-        output_bytes = whatweb_utils.run_whatweb_scan(target_url, plugin_list)
+        output_bytes = whatweb_utils.run_whatweb_scan(target_url)
         fingerprint_dicts = whatweb_utils.parse_whatweb_output(output_bytes)
 
         seen_fingerprints: set[tuple[str, str | None, str]] = set()
