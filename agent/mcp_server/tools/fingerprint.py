@@ -3,7 +3,6 @@
 import logging
 import subprocess
 
-from agent import definitions
 from agent import whatweb_utils
 from agent.mcp_server import models
 from agent.mcp_server import server as mcp_server
@@ -17,28 +16,17 @@ mcp = mcp_server.mcp
 @mcp.tool()
 def fingerprint(
     target: str,
-    port: int | None = None,
-    scheme: str | None = None,
 ) -> models.ScanResult:
     """Scan a web target to identify technologies and fingerprints.
 
     Args:
-        target: The target to scan (domain, URL, or IP address).
-        port: Optional port number to use (defaults to 80 for http, 443 for https).
-        scheme: Optional URL scheme (http or https). Defaults to https.
+        target: Must be a complete URL including scheme (http/https) and port.
 
     Returns:
         Scan results containing detected technology fingerprints.
     """
-    if scheme is None:
-        scheme = "https"
-
-    if port is None:
-        port = definitions.SCHEME_TO_PORT.get(scheme, 443)
-
     try:
-        target_url = whatweb_utils.normalize_target(target, port, scheme)
-        output_bytes = whatweb_utils.run_whatweb_scan(target_url)
+        output_bytes = whatweb_utils.run_whatweb_scan(target)
         fingerprint_dicts = whatweb_utils.parse_whatweb_output(output_bytes)
 
         seen_fingerprints: set[tuple[str, str | None, str]] = set()
@@ -61,9 +49,7 @@ def fingerprint(
                     )
                 )
 
-        return models.ScanResult(
-            target_url=target_url, fingerprints=unique_fingerprints
-        )
+        return models.ScanResult(target_url=target, fingerprints=unique_fingerprints)
 
     except subprocess.CalledProcessError as e:
         logger.error("WhatWeb scan failed for target %s: %s", target, e)

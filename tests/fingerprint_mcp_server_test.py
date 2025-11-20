@@ -3,7 +3,6 @@
 import pathlib
 import subprocess
 
-import pytest
 from pytest_mock import plugin
 
 from agent import definitions
@@ -20,7 +19,7 @@ def testFingerprint_whenTargetIsValid_returnsFingerprints(
 
     mocker.patch("agent.whatweb_utils.run_whatweb_scan", return_value=mock_output)
 
-    result = fingerprint_tool.fingerprint(target="ostorlab.co")
+    result = fingerprint_tool.fingerprint(target="https://ostorlab.co:443")
 
     assert result.target_url == "https://ostorlab.co:443"
     assert len(result.fingerprints) > 0
@@ -56,7 +55,7 @@ def testFingerprint_whenSchemeIsHttp_usesPort80(
 
     mocker.patch("agent.whatweb_utils.run_whatweb_scan", return_value=mock_output)
 
-    result = fingerprint_tool.fingerprint(target="ostorlab.co", scheme="http")
+    result = fingerprint_tool.fingerprint(target="http://ostorlab.co:80")
 
     assert result.target_url == "http://ostorlab.co:80"
 
@@ -70,7 +69,7 @@ def testFingerprint_whenSchemeIsHttps_usesPort443(
 
     mocker.patch("agent.whatweb_utils.run_whatweb_scan", return_value=mock_output)
 
-    result = fingerprint_tool.fingerprint(target="ostorlab.co", scheme="https")
+    result = fingerprint_tool.fingerprint(target="https://ostorlab.co:443")
 
     assert result.target_url == "https://ostorlab.co:443"
 
@@ -84,9 +83,7 @@ def testFingerprint_whenCustomPort_usesCustomPort(
 
     mocker.patch("agent.whatweb_utils.run_whatweb_scan", return_value=mock_output)
 
-    result = fingerprint_tool.fingerprint(
-        target="ostorlab.co", port=8080, scheme="http"
-    )
+    result = fingerprint_tool.fingerprint(target="http://ostorlab.co:8080")
 
     assert result.target_url == "http://ostorlab.co:8080"
 
@@ -100,7 +97,7 @@ def testFingerprint_whenBlacklistedPlugins_filtersThemOut(
 
     mocker.patch("agent.whatweb_utils.run_whatweb_scan", return_value=mock_output)
 
-    result = fingerprint_tool.fingerprint(target="ostorlab.co")
+    result = fingerprint_tool.fingerprint(target="https://ostorlab.co:443")
 
     assert not any(
         fp.name in definitions.BLACKLISTED_PLUGINS for fp in result.fingerprints
@@ -116,7 +113,7 @@ def testFingerprint_whenIPTarget_scansSuccessfully(
 
     mocker.patch("agent.whatweb_utils.run_whatweb_scan", return_value=mock_output)
 
-    result = fingerprint_tool.fingerprint(target="192.168.0.76")
+    result = fingerprint_tool.fingerprint(target="https://192.168.0.76:443")
 
     assert result.target_url == "https://192.168.0.76:443"
     assert len(result.fingerprints) > 0
@@ -132,18 +129,10 @@ def testFingerprint_whenScanFails_returnsEmptyResult(
         side_effect=subprocess.CalledProcessError(1, "cmd"),
     )
 
-    result = fingerprint_tool.fingerprint(target="ostorlab.co")
+    result = fingerprint_tool.fingerprint(target="https://ostorlab.co:443")
 
-    assert result.target_url == "ostorlab.co"
+    assert result.target_url == "https://ostorlab.co:443"
     assert len(result.fingerprints) == 0
-
-
-def testFingerprint_whenUnsupportedScheme_raisesValueError(
-    mocker: plugin.MockerFixture,
-) -> None:
-    """Test fingerprint raises ValueError for unsupported schemes."""
-    with pytest.raises(ValueError, match="Unsupported scheme"):
-        fingerprint_tool.fingerprint(target="ostorlab.co", scheme="ftp")
 
 
 def testFingerprint_whenEmptyOutput_returnsEmptyFingerprints(
@@ -152,7 +141,7 @@ def testFingerprint_whenEmptyOutput_returnsEmptyFingerprints(
     """Test fingerprint handles empty output gracefully."""
     mocker.patch("agent.whatweb_utils.run_whatweb_scan", return_value=b"")
 
-    result = fingerprint_tool.fingerprint(target="ostorlab.co")
+    result = fingerprint_tool.fingerprint(target="https://ostorlab.co:443")
 
     assert result.target_url == "https://ostorlab.co:443"
     assert len(result.fingerprints) == 0
@@ -182,26 +171,3 @@ def testParseWhatWebOutput_whenStringPresent_usesStringAsName() -> None:
     assert len(fingerprint_dicts) == 1
     assert fingerprint_dicts[0]["name"] == "nginx"
     assert fingerprint_dicts[0]["version"] == "1.18.0"
-
-
-def testNormalizeTarget_whenTargetIsURL_returnsUnchanged() -> None:
-    """Test normalize_target preserves valid URLs."""
-    url = "https://example.com:8080"
-
-    result = whatweb_utils.normalize_target(url)
-
-    assert result == url
-
-
-def testNormalizeTarget_whenSchemeAndPort_buildsCorrectURL() -> None:
-    """Test normalize_target builds URL with scheme and port."""
-    result = whatweb_utils.normalize_target("example.com", port=8080, scheme="http")
-
-    assert result == "http://example.com:8080"
-
-
-def testNormalizeTarget_whenOnlyScheme_buildsURLWithoutPort() -> None:
-    """Test normalize_target builds URL with just scheme."""
-    result = whatweb_utils.normalize_target("example.com", scheme="https")
-
-    assert result == "https://example.com"

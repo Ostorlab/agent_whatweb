@@ -6,42 +6,10 @@ import logging
 import os
 import subprocess
 import tempfile
-import urllib.parse
 
 from agent import definitions
 
 logger = logging.getLogger(__name__)
-
-
-def normalize_target(
-    target: str, port: int | None = None, scheme: str | None = None
-) -> str:
-    """Normalize target to a valid URL for WhatWeb."""
-    if "://" in target:
-        parsed = urllib.parse.urlparse(target)
-        if parsed.scheme not in definitions.SCHEME_TO_PORT:
-            raise ValueError(f"Unsupported scheme: {parsed.scheme}")
-        return target
-
-    if scheme is None:
-        scheme = "https"
-
-    if scheme not in definitions.SCHEME_TO_PORT:
-        raise ValueError(f"Unsupported scheme: {scheme}")
-
-    if "/" in target:
-        host_part, path_part = target.split("/", 1)
-        if port is not None:
-            url = f"{scheme}://{host_part}:{port}/{path_part}"
-        else:
-            url = f"{scheme}://{host_part}/{path_part}"
-    else:
-        if port is not None:
-            url = f"{scheme}://{target}:{port}"
-        else:
-            url = f"{scheme}://{target}"
-
-    return url
 
 
 def run_whatweb_scan(target_url: str) -> bytes:

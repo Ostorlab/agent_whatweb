@@ -8,29 +8,6 @@ from pytest_mock import plugin
 from agent import whatweb_utils
 
 
-def testNormalizeTarget_whenTargetHasPath_buildsCorrectURL() -> None:
-    """Test normalize_target handles paths correctly."""
-    result = whatweb_utils.normalize_target("example.com/path/to/page", scheme="http")
-
-    assert result == "http://example.com/path/to/page"
-
-
-def testNormalizeTarget_whenTargetHasPathAndPort_buildsCorrectURL() -> None:
-    """Test normalize_target handles paths and ports correctly."""
-    result = whatweb_utils.normalize_target(
-        "example.com/path", port=8080, scheme="http"
-    )
-
-    assert result == "http://example.com:8080/path"
-
-
-def testNormalizeTarget_whenDefaultScheme_usesHttps() -> None:
-    """Test normalize_target defaults to https."""
-    result = whatweb_utils.normalize_target("example.com")
-
-    assert result == "https://example.com"
-
-
 def testParseWhatWebOutput_whenEmptyBytes_returnsEmptyList() -> None:
     """Test parse_whatweb_output handles empty input."""
     result = whatweb_utils.parse_whatweb_output(b"")
@@ -174,18 +151,6 @@ def testParseWhatWebOutput_whenMultipleMetadataEntries_parsesAll() -> None:
     assert len(result) == 2
     assert result[0]["version"] == "1.0"
     assert result[1]["version"] == "2.0"
-
-
-def testNormalizeTarget_whenURLWithUnsupportedScheme_raisesValueError() -> None:
-    """Test normalize_target raises error for unsupported URL scheme."""
-    with pytest.raises(ValueError, match="Unsupported scheme: ftp"):
-        whatweb_utils.normalize_target("ftp://example.com")
-
-
-def testNormalizeTarget_whenSchemeUnsupported_raisesValueError() -> None:
-    """Test normalize_target raises error for unsupported scheme parameter."""
-    with pytest.raises(ValueError, match="Unsupported scheme: ftp"):
-        whatweb_utils.normalize_target("example.com", scheme="ftp")
 
 
 def testRunWhatWebScan_whenFileDoesNotExist_doesNotCallUnlink(
