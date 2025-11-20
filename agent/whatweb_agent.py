@@ -127,7 +127,6 @@ class AgentWhatWeb(
         if self._should_start_mcp_server is True:
             logger.info("Starting WhatWeb MCP server...")
             mcp_server.run()
-            logger.info("WhatWeb MCP server started.")
 
     def process(self, message: msg.Message) -> None:
         """Starts a whatweb scan, wait for the scan to finish,
