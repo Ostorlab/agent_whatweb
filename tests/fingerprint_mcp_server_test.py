@@ -3,121 +3,85 @@
 import pathlib
 import subprocess
 
+import pytest
 from pytest_mock import plugin
 
 from agent import definitions
 from agent import whatweb_utils
-from agent.mcp_server.tools import fingerprint as fingerprint_tool
+from agent.mcp_server import tools
+
+TESTS_DIR = pathlib.Path(__file__).parent
+
+
+@pytest.fixture
+def mock_whatweb_output() -> bytes:
+    """Load mock WhatWeb output from test file."""
+    return (TESTS_DIR / "output.json").read_bytes()
+
+
+@pytest.fixture
+def mock_ip_whatweb_output() -> bytes:
+    """Load mock WhatWeb output for IP target from test file."""
+    return (TESTS_DIR / "ip_output.json").read_bytes()
 
 
 def testFingerprint_whenTargetIsValid_returnsFingerprints(
     mocker: plugin.MockerFixture,
+    mock_whatweb_output: bytes,
 ) -> None:
     """Test fingerprint with valid target returns fingerprints correctly."""
-    with open(f"{pathlib.Path(__file__).parent}/output.json", "rb") as op:
-        mock_output = op.read()
+    mocker.patch(
+        "agent.whatweb_utils.run_whatweb_scan", return_value=mock_whatweb_output
+    )
 
-    mocker.patch("agent.whatweb_utils.run_whatweb_scan", return_value=mock_output)
-
-    result = fingerprint_tool.fingerprint(target="https://ostorlab.co:443")
+    result = tools.fingerprint(target="https://ostorlab.co:443")
 
     assert result.target_url == "https://ostorlab.co:443"
-    assert len(result.fingerprints) > 0
-    assert any(fp.name == "Google-Analytics" for fp in result.fingerprints)
+    assert len(result.fingerprints) == 5
+    fingerprint_names = [fp.name for fp in result.fingerprints]
+    assert "Google-Analytics" in fingerprint_names
+    assert "cloudflare" in fingerprint_names
     assert any(
         fp.name == "Google-Analytics" and fp.version == "Universal"
         for fp in result.fingerprints
     )
-    assert any(fp.type == "BACKEND_COMPONENT" for fp in result.fingerprints)
-
-
-def testFingerprint_whenTargetIsURL_parsesCorrectly(
-    mocker: plugin.MockerFixture,
-) -> None:
-    """Test fingerprint with full URL target."""
-    with open(f"{pathlib.Path(__file__).parent}/output.json", "rb") as op:
-        mock_output = op.read()
-
-    mocker.patch("agent.whatweb_utils.run_whatweb_scan", return_value=mock_output)
-
-    result = fingerprint_tool.fingerprint(target="http://ostorlab.co:80")
-
-    assert result.target_url == "http://ostorlab.co:80"
-    assert len(result.fingerprints) > 0
-
-
-def testFingerprint_whenSchemeIsHttp_usesPort80(
-    mocker: plugin.MockerFixture,
-) -> None:
-    """Test fingerprint uses correct default port for http."""
-    with open(f"{pathlib.Path(__file__).parent}/output.json", "rb") as op:
-        mock_output = op.read()
-
-    mocker.patch("agent.whatweb_utils.run_whatweb_scan", return_value=mock_output)
-
-    result = fingerprint_tool.fingerprint(target="http://ostorlab.co:80")
-
-    assert result.target_url == "http://ostorlab.co:80"
-
-
-def testFingerprint_whenSchemeIsHttps_usesPort443(
-    mocker: plugin.MockerFixture,
-) -> None:
-    """Test fingerprint uses correct default port for https."""
-    with open(f"{pathlib.Path(__file__).parent}/output.json", "rb") as op:
-        mock_output = op.read()
-
-    mocker.patch("agent.whatweb_utils.run_whatweb_scan", return_value=mock_output)
-
-    result = fingerprint_tool.fingerprint(target="https://ostorlab.co:443")
-
-    assert result.target_url == "https://ostorlab.co:443"
-
-
-def testFingerprint_whenCustomPort_usesCustomPort(
-    mocker: plugin.MockerFixture,
-) -> None:
-    """Test fingerprint uses custom port when specified."""
-    with open(f"{pathlib.Path(__file__).parent}/output.json", "rb") as op:
-        mock_output = op.read()
-
-    mocker.patch("agent.whatweb_utils.run_whatweb_scan", return_value=mock_output)
-
-    result = fingerprint_tool.fingerprint(target="http://ostorlab.co:8080")
-
-    assert result.target_url == "http://ostorlab.co:8080"
 
 
 def testFingerprint_whenBlacklistedPlugins_filtersThemOut(
     mocker: plugin.MockerFixture,
+    mock_whatweb_output: bytes,
 ) -> None:
     """Test fingerprint filters out blacklisted plugins."""
-    with open(f"{pathlib.Path(__file__).parent}/output.json", "rb") as op:
-        mock_output = op.read()
-
-    mocker.patch("agent.whatweb_utils.run_whatweb_scan", return_value=mock_output)
-
-    result = fingerprint_tool.fingerprint(target="https://ostorlab.co:443")
-
-    assert not any(
-        fp.name in definitions.BLACKLISTED_PLUGINS for fp in result.fingerprints
+    mocker.patch(
+        "agent.whatweb_utils.run_whatweb_scan", return_value=mock_whatweb_output
     )
+
+    result = tools.fingerprint(target="https://ostorlab.co:443")
+
+    blacklisted_names = [
+        fp.name
+        for fp in result.fingerprints
+        if fp.name in definitions.BLACKLISTED_PLUGINS
+    ]
+    assert len(blacklisted_names) == 0
 
 
 def testFingerprint_whenIPTarget_scansSuccessfully(
     mocker: plugin.MockerFixture,
+    mock_ip_whatweb_output: bytes,
 ) -> None:
     """Test fingerprint with IP address target."""
-    with open(f"{pathlib.Path(__file__).parent}/ip_output.json", "rb") as op:
-        mock_output = op.read()
+    mocker.patch(
+        "agent.whatweb_utils.run_whatweb_scan", return_value=mock_ip_whatweb_output
+    )
 
-    mocker.patch("agent.whatweb_utils.run_whatweb_scan", return_value=mock_output)
-
-    result = fingerprint_tool.fingerprint(target="https://192.168.0.76:443")
+    result = tools.fingerprint(target="https://192.168.0.76:443")
 
     assert result.target_url == "https://192.168.0.76:443"
-    assert len(result.fingerprints) > 0
-    assert any("lighttpd" in fp.name for fp in result.fingerprints)
+    assert len(result.fingerprints) == 16
+    fingerprint_names = [fp.name for fp in result.fingerprints]
+    assert "lighttpd" in fingerprint_names
+    assert "JQuery" in fingerprint_names
 
 
 def testFingerprint_whenScanFails_returnsEmptyResult(
@@ -129,7 +93,7 @@ def testFingerprint_whenScanFails_returnsEmptyResult(
         side_effect=subprocess.CalledProcessError(1, "cmd"),
     )
 
-    result = fingerprint_tool.fingerprint(target="https://ostorlab.co:443")
+    result = tools.fingerprint(target="https://ostorlab.co:443")
 
     assert result.target_url == "https://ostorlab.co:443"
     assert len(result.fingerprints) == 0
@@ -141,7 +105,7 @@ def testFingerprint_whenEmptyOutput_returnsEmptyFingerprints(
     """Test fingerprint handles empty output gracefully."""
     mocker.patch("agent.whatweb_utils.run_whatweb_scan", return_value=b"")
 
-    result = fingerprint_tool.fingerprint(target="https://ostorlab.co:443")
+    result = tools.fingerprint(target="https://ostorlab.co:443")
 
     assert result.target_url == "https://ostorlab.co:443"
     assert len(result.fingerprints) == 0

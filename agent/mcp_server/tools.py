@@ -1,22 +1,15 @@
-"""WhatWeb fingerprint tool implementation."""
+"""WhatWeb MCP server tools."""
 
 import logging
 import subprocess
 
 from agent import whatweb_utils
 from agent.mcp_server import models
-from agent.mcp_server import server as mcp_server
-
 
 logger = logging.getLogger(__name__)
 
-mcp = mcp_server.mcp
 
-
-@mcp.tool()
-def fingerprint(
-    target: str,
-) -> models.ScanResult:
+def fingerprint(target: str) -> models.ScanResult:
     """Scan a web target to identify technologies and fingerprints.
 
     Args:
