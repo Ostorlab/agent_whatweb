@@ -3,7 +3,7 @@
 import logging
 
 import fastmcp
-from fastmcp.tools import Tool
+from fastmcp import tools as fastmcp_tools
 
 from agent.mcp_server import tools
 
@@ -14,7 +14,7 @@ MCP_SERVER_HOST = "0.0.0.0"
 MCP_SERVER_PORT = 8000
 
 mcp = fastmcp.FastMCP(MCP_SERVER_NAME)
-mcp.add_tool(Tool.from_function(tools.fingerprint))
+mcp.add_tool(fastmcp_tools.Tool.from_function(tools.fingerprint))
 
 
 def run() -> None:
