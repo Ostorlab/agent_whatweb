@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 MCP_SERVER_NAME = "whatweb-mcp"
 MCP_SERVER_HOST = "0.0.0.0"
-MCP_SERVER_PORT = 8000
+MCP_SERVER_PORT = 50051
 
 mcp = fastmcp.FastMCP(MCP_SERVER_NAME)
 mcp.add_tool(fastmcp_tools.Tool.from_function(tools.fingerprint))
