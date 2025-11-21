@@ -79,18 +79,17 @@ def testFingerprint_whenIPTarget_scansSuccessfully(
     assert "JQuery" in fingerprint_names
 
 
-def testFingerprint_whenScanFails_returnsEmptyResult(
+def testFingerprint_whenScanFails_raisesException(
     mocker: plugin.MockerFixture,
 ) -> None:
-    """Test fingerprint handles scan failures gracefully."""
+    """Test fingerprint raises exception on scan failure."""
     mocker.patch(
         "agent.whatweb_utils.run_whatweb_scan",
         side_effect=subprocess.CalledProcessError(1, "cmd"),
     )
 
-    result = tools.fingerprint(target="https://ostorlab.co:443")
-
-    assert len(result) == 0
+    with pytest.raises(subprocess.CalledProcessError):
+        tools.fingerprint(target="https://ostorlab.co:443")
 
 
 def testFingerprint_whenEmptyOutput_returnsEmptyFingerprints(
