@@ -36,14 +36,12 @@ def testFingerprint_whenTargetIsValid_returnsFingerprints(
 
     result = tools.fingerprint(target="https://ostorlab.co:443")
 
-    assert result.target_url == "https://ostorlab.co:443"
-    assert len(result.fingerprints) == 5
-    fingerprint_names = [fp.name for fp in result.fingerprints]
+    assert len(result) == 5
+    fingerprint_names = [fp.name for fp in result]
     assert "Google-Analytics" in fingerprint_names
     assert "cloudflare" in fingerprint_names
     assert any(
-        fp.name == "Google-Analytics" and fp.version == "Universal"
-        for fp in result.fingerprints
+        fp.name == "Google-Analytics" and fp.version == "Universal" for fp in result
     )
 
 
@@ -59,9 +57,7 @@ def testFingerprint_whenBlacklistedPlugins_filtersThemOut(
     result = tools.fingerprint(target="https://ostorlab.co:443")
 
     blacklisted_names = [
-        fp.name
-        for fp in result.fingerprints
-        if fp.name in definitions.BLACKLISTED_PLUGINS
+        fp.name for fp in result if fp.name in definitions.BLACKLISTED_PLUGINS
     ]
     assert len(blacklisted_names) == 0
 
@@ -77,9 +73,8 @@ def testFingerprint_whenIPTarget_scansSuccessfully(
 
     result = tools.fingerprint(target="https://192.168.0.76:443")
 
-    assert result.target_url == "https://192.168.0.76:443"
-    assert len(result.fingerprints) == 16
-    fingerprint_names = [fp.name for fp in result.fingerprints]
+    assert len(result) == 16
+    fingerprint_names = [fp.name for fp in result]
     assert "lighttpd" in fingerprint_names
     assert "JQuery" in fingerprint_names
 
@@ -95,8 +90,7 @@ def testFingerprint_whenScanFails_returnsEmptyResult(
 
     result = tools.fingerprint(target="https://ostorlab.co:443")
 
-    assert result.target_url == "https://ostorlab.co:443"
-    assert len(result.fingerprints) == 0
+    assert len(result) == 0
 
 
 def testFingerprint_whenEmptyOutput_returnsEmptyFingerprints(
@@ -107,8 +101,7 @@ def testFingerprint_whenEmptyOutput_returnsEmptyFingerprints(
 
     result = tools.fingerprint(target="https://ostorlab.co:443")
 
-    assert result.target_url == "https://ostorlab.co:443"
-    assert len(result.fingerprints) == 0
+    assert len(result) == 0
 
 
 def testParseWhatWebOutput_whenVersionIsList_extractsAllVersions() -> None:

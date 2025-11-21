@@ -9,14 +9,14 @@ from agent.mcp_server import models
 logger = logging.getLogger(__name__)
 
 
-def fingerprint(target: str) -> models.ScanResult:
+def fingerprint(target: str) -> list[models.Fingerprint]:
     """Scan a web target to identify technologies and fingerprints.
 
     Args:
         target: Must be a complete URL including scheme (http/https) and port.
 
     Returns:
-        Scan results containing detected technology fingerprints.
+        List of detected technology fingerprints.
     """
     try:
         output_bytes = whatweb_utils.run_whatweb_scan(target)
@@ -42,11 +42,11 @@ def fingerprint(target: str) -> models.ScanResult:
                     )
                 )
 
-        return models.ScanResult(target_url=target, fingerprints=unique_fingerprints)
+        return unique_fingerprints
 
     except subprocess.CalledProcessError as e:
         logger.error("WhatWeb scan failed for target %s: %s", target, e)
-        return models.ScanResult(target_url=target, fingerprints=[])
+        return []
     except ValueError as e:
         logger.error("Invalid target configuration: %s", e)
         raise
