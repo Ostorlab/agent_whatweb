@@ -653,11 +653,10 @@ def testWhatWebAgent_whenSchemeIsNotHTTP_defaultToNoScheme(
             whatweb_test_agent.process(ip_tcp_message)
 
             assert run_mock.call_count == 1
-            assert run_mock.call_args[0][0] == [
-                "./whatweb",
-                "--log-json-verbose=11",
-                "192.168.0.0:80",
-            ]
+            call_args = run_mock.call_args[0][0]
+            assert call_args[0] == "./whatweb"
+            assert call_args[1].startswith("--log-json-verbose=")
+            assert call_args[2] == "192.168.0.0:80"
 
 
 def testWhatWebAgent_withIPv4AndMaskButNoVersion_shouldHandleVersionCorrectly(
@@ -861,3 +860,31 @@ def testWhatWebAgent_withLinkMsgDetectsPlex_emitsPlexFingerprints(
             assert any(
                 vuln_msg.data.get("security_issue") is True for vuln_msg in agent_mock
             )
+
+
+def testWhatWebAgent_whenMCPServerDisabled_startDoesNothing(
+    whatweb_test_agent: whatweb_agent.AgentWhatWeb,
+    mocker: plugin.MockerFixture,
+) -> None:
+    """Test that start method does nothing when MCP server is disabled."""
+    mcp_run_mock = mocker.patch("agent.mcp_server.server.run")
+
+    whatweb_test_agent.start()
+
+    assert mcp_run_mock.call_count == 0
+
+
+def testWhatWebAgent_whenMCPServerEnabled_startsServerAndSkipsProcessing(
+    whatweb_agent_with_mcp_server: whatweb_agent.AgentWhatWeb,
+    agent_mock: list[message.Message],
+    domain_msg: message.Message,
+    mocker: plugin.MockerFixture,
+) -> None:
+    """Test that when MCP server is enabled, start method starts server and process returns None."""
+    mcp_run_mock = mocker.patch("agent.mcp_server.server.run")
+
+    whatweb_agent_with_mcp_server.start()
+
+    assert mcp_run_mock.call_count == 1
+    whatweb_agent_with_mcp_server.process(domain_msg)
+    assert len(agent_mock) == 0

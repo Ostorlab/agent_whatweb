@@ -108,7 +108,10 @@ def whatweb_test_agent(
         agent_definition = agent_definitions.AgentDefinition.from_yaml(yaml_o)
         agent_settings = runtime_definitions.AgentSettings(
             key="whatweb",
+            bus_url="NA",
+            bus_exchange_topic="NA",
             redis_url="redis://redis",
+            healthcheck_port=random.randint(4000, 5000),
             args=[
                 definitions.Arg(
                     name="schema", type="string", value=json.dumps("https").encode()
@@ -207,3 +210,28 @@ def scan_message_ipv_with_incorrect_version() -> m.Message:
         "version": 5,
     }
     return m.Message.from_data(selector, data=msg_data)
+
+
+@pytest.fixture(scope="function")
+def whatweb_agent_with_mcp_server(
+    agent_persist_mock: Dict[Union[str, bytes], Union[str, bytes]],
+) -> whatweb_agent.AgentWhatWeb:
+    """WhatWeb Agent fixture with MCP server enabled for testing purposes."""
+    del agent_persist_mock
+    with (pathlib.Path(__file__).parent.parent / "ostorlab.yaml").open() as yaml_o:
+        agent_definition = agent_definitions.AgentDefinition.from_yaml(yaml_o)
+        agent_settings = runtime_definitions.AgentSettings(
+            key="whatweb",
+            bus_url="NA",
+            bus_exchange_topic="NA",
+            redis_url="redis://redis",
+            healthcheck_port=random.randint(4000, 5000),
+            args=[
+                definitions.Arg(
+                    name="should_start_mcp_server",
+                    type="boolean",
+                    value=json.dumps(True).encode(),
+                ),
+            ],
+        )
+        return whatweb_agent.AgentWhatWeb(agent_definition, agent_settings)

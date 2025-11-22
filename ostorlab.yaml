@@ -80,6 +80,7 @@ out_selectors:
  - v3.report.vulnerability
 docker_file_path: Dockerfile
 docker_build_root: .
+service_name: "whatweb"
 args:
  - name: port
    type: number
@@ -92,3 +93,7 @@ args:
  - name: "scope_domain_regex"
    type: "string"
    description: "Regular expression to define domain scanning scope."
+ - name: "should_start_mcp_server"
+   type: "boolean"
+   description: "If the agent should start a whatweb mcp server."
+   value: false

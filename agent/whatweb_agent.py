@@ -12,6 +12,8 @@ import tempfile
 from typing import List, Optional, Dict, Any
 from urllib import parse
 
+from agent.mcp_server import server as mcp_server
+
 from ostorlab.agent import agent
 from ostorlab.agent import definitions as agent_definitions
 from ostorlab.agent.kb import kb
@@ -23,6 +25,8 @@ from ostorlab.assets import ipv4 as ipv4_asset
 from ostorlab.assets import ipv6 as ipv6_asset
 from ostorlab.runtimes import definitions as runtime_definitions
 from rich import logging as rich_logging
+
+from agent import definitions
 
 logging.basicConfig(
     format="%(message)s",
@@ -41,47 +45,6 @@ VULNZ_SHORT_DESCRIPTION = "List of web technologies recognized"
 VULNZ_DESCRIPTION = """Lists web technologies including content management systems(CMS), blogging platforms,
 statistic/analytics packages, JavaScript libraries, web servers, embedded devices, version numbers, email addresses,
 account IDs, web framework modules, SQL errors, and more."""
-
-# These are verbose non-preferred plugins.
-BLACKLISTED_PLUGINS = [
-    "X-Frame-Options",
-    "RedirectLocation",
-    "Cookies",
-    "Access-Control-Allow-Methods",
-    "Content-Security-Policy",
-    "X-Forwarded-For",
-    "Via-Proxy",
-    "Allow",
-    "Strict-Transport-Security",
-    "X-XSS-Protection",
-    "x-pingback",
-    "Strict-Transport-Security",
-    "UncommonHeaders",
-    "HTML5",
-    "Script",
-    "Title",
-    "Email",
-    "Meta-Author",
-    "Frame",
-    "PasswordField",
-    "MetaGenerator",
-    "Object",
-    "Country",
-    "IP",
-]
-
-DEFAULT_FINGERPRINT = "BACKEND_COMPONENT"
-
-FINGERPRINT_TYPE = {"jquery": "JAVASCRIPT_LIBRARY"}
-
-WHATWEB_PATH = "./whatweb"
-WHATWEB_DIRECTORY = "/WhatWeb"
-DOMAIN_NAME_LIB_SELECTOR = "v3.fingerprint.domain_name.service.library"
-IP_V4_LIB_SELECTOR = "v3.fingerprint.ip.v4.service.library"
-IP_V6_LIB_SELECTOR = "v3.fingerprint.ip.v6.service.library"
-SCHEME_TO_PORT = {"http": 80, "https": 443}
-IPV4_CIDR_LIMIT = 16
-IPV6_CIDR_LIMIT = 112
 
 
 class BaseTarget(abc.ABC):
@@ -155,6 +118,15 @@ class AgentWhatWeb(
         vuln_mixin.AgentReportVulnMixin.__init__(self)
         persist_mixin.AgentPersistMixin.__init__(self, agent_settings)
         self._scope_domain_regex: Optional[str] = self.args.get("scope_domain_regex")
+        self._should_start_mcp_server: bool = self.args.get(
+            "should_start_mcp_server", False
+        )
+
+    def start(self) -> None:
+        """Starts the agent and the MCP server if configured to do so."""
+        if self._should_start_mcp_server is True:
+            logger.info("Starting WhatWeb MCP server...")
+            mcp_server.run()
 
     def process(self, message: msg.Message) -> None:
         """Starts a whatweb scan, wait for the scan to finish,
@@ -163,6 +135,9 @@ class AgentWhatWeb(
         Args:
             message:  The message to process from ostorlab runtime.
         """
+        if self._should_start_mcp_server is True:
+            return
+
         logger.info("processing message of selector : %s", message.selector)
         targets = self._prepare_targets(message)
         logger.info("Generated targets %s", targets)
@@ -239,13 +214,13 @@ class AgentWhatWeb(
                     raise ValueError(f"Invalid IP address: {host}")
             if version not in (4, 6):
                 raise ValueError(f"Incorrect ip version {version}.")
-            elif version == 4 and int(mask) < IPV4_CIDR_LIMIT:
+            elif version == 4 and int(mask) < definitions.IPV4_CIDR_LIMIT:
                 raise ValueError(
-                    f"Subnet mask below {IPV4_CIDR_LIMIT} is not supported."
+                    f"Subnet mask below {definitions.IPV4_CIDR_LIMIT} is not supported."
                 )
-            elif version == 6 and int(mask) < IPV6_CIDR_LIMIT:
+            elif version == 6 and int(mask) < definitions.IPV6_CIDR_LIMIT:
                 raise ValueError(
-                    f"Subnet mask below {IPV6_CIDR_LIMIT} is not supported."
+                    f"Subnet mask below {definitions.IPV6_CIDR_LIMIT} is not supported."
                 )
             network = ipaddress.ip_network(f"{host}/{mask}", strict=False)
 
@@ -337,7 +312,7 @@ class AgentWhatWeb(
     def _get_target_from_url(self, url: str) -> DomainTarget | None:
         """Compute schema and port from a URL"""
         parsed_url = parse.urlparse(url)
-        if parsed_url.scheme not in SCHEME_TO_PORT:
+        if parsed_url.scheme not in definitions.SCHEME_TO_PORT:
             logger.warning("Unsupported schema %s", parsed_url.scheme)
             return None
         schema = str(parsed_url.scheme) or str(self.args["schema"])
@@ -350,7 +325,7 @@ class AgentWhatWeb(
                 if parsed_url.netloc.split(":")[-1] is not None
                 else 0
             )
-        port = port or SCHEME_TO_PORT.get(schema) or self.args.get("port")
+        port = port or definitions.SCHEME_TO_PORT.get(schema) or self.args.get("port")
         target = DomainTarget(name=domain_name, schema=schema, port=port)
         return target
 
@@ -363,11 +338,11 @@ class AgentWhatWeb(
         """
         logger.info("Staring a new scan for %s .", target.name)
         whatweb_command = [
-            WHATWEB_PATH,
+            definitions.WHATWEB_PATH,
             f"--log-json-verbose={output_file}",
             target.target,
         ]
-        subprocess.run(whatweb_command, cwd=WHATWEB_DIRECTORY, check=True)
+        subprocess.run(whatweb_command, cwd=definitions.WHATWEB_DIRECTORY, check=True)
 
     def _parse_emit_result(
         self, target: DomainTarget | IPTarget, output_file: io.BytesIO
@@ -392,7 +367,7 @@ class AgentWhatWeb(
                                 plugin = list_plugin
 
                             # Discard blacklisted plugins.
-                            if plugin not in BLACKLISTED_PLUGINS:
+                            if plugin not in definitions.BLACKLISTED_PLUGINS:
                                 values = list_plugin[1]
                                 versions = []
                                 library_name = plugin
@@ -458,9 +433,12 @@ class AgentWhatWeb(
         """
         logger.info("Found fingerprint %s %s %s", target.name, library_name, versions)
         fingerprint_type = (
-            FINGERPRINT_TYPE[library_name.lower()]
-            if (library_name is not None and library_name.lower() in FINGERPRINT_TYPE)
-            else DEFAULT_FINGERPRINT
+            definitions.FINGERPRINT_TYPE_MAP[library_name.lower()]
+            if (
+                library_name is not None
+                and library_name.lower() in definitions.FINGERPRINT_TYPE_MAP
+            )
+            else definitions.DEFAULT_FINGERPRINT_TYPE
         )
 
         vulnerable_target_data = self._prepare_vulnerable_target_data(target)
@@ -471,11 +449,13 @@ class AgentWhatWeb(
                     target, library_name, version, fingerprint_type
                 )
                 if isinstance(target, DomainTarget):
-                    self.emit(selector=DOMAIN_NAME_LIB_SELECTOR, data=msg_data)
+                    self.emit(
+                        selector=definitions.DOMAIN_NAME_LIB_SELECTOR, data=msg_data
+                    )
                 elif isinstance(target, IPTarget) and target.version == 4:
-                    self.emit(selector=IP_V4_LIB_SELECTOR, data=msg_data)
+                    self.emit(selector=definitions.IP_V4_LIB_SELECTOR, data=msg_data)
                 elif isinstance(target, IPTarget) and target.version == 6:
-                    self.emit(selector=IP_V6_LIB_SELECTOR, data=msg_data)
+                    self.emit(selector=definitions.IP_V6_LIB_SELECTOR, data=msg_data)
 
                 self.report_vulnerability(
                     entry=kb.Entry(
@@ -500,11 +480,11 @@ class AgentWhatWeb(
             # No version is found.
             msg_data = self._get_msg_data(target, library_name, None, fingerprint_type)
             if isinstance(target, DomainTarget):
-                self.emit(selector=DOMAIN_NAME_LIB_SELECTOR, data=msg_data)
+                self.emit(selector=definitions.DOMAIN_NAME_LIB_SELECTOR, data=msg_data)
             elif isinstance(target, IPTarget) and target.version == 4:
-                self.emit(selector=IP_V4_LIB_SELECTOR, data=msg_data)
+                self.emit(selector=definitions.IP_V4_LIB_SELECTOR, data=msg_data)
             elif isinstance(target, IPTarget) and target.version == 6:
-                self.emit(selector=IP_V6_LIB_SELECTOR, data=msg_data)
+                self.emit(selector=definitions.IP_V6_LIB_SELECTOR, data=msg_data)
 
             self.report_vulnerability(
                 entry=kb.Entry(
