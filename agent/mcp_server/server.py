@@ -14,12 +14,11 @@ MCP_SERVER_NAME = "whatweb-mcp"
 MCP_SERVER_HOST = "0.0.0.0"
 MCP_SERVER_PORT = 50051
 
-mcp = fastmcp.FastMCP(MCP_SERVER_NAME)
-mcp.add_tool(fastmcp_tools.Tool.from_function(tools.fingerprint))
-
 
 def run() -> None:
     """Start the MCP server in a background thread."""
+    mcp = fastmcp.FastMCP(MCP_SERVER_NAME)
+    mcp.add_tool(fastmcp_tools.Tool.from_function(tools.fingerprint))
     logger.info("Starting MCP server on %s:%s", MCP_SERVER_HOST, MCP_SERVER_PORT)
     mcp_thread = threading.Thread(
         target=mcp.run,
