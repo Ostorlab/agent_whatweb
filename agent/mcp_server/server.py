@@ -15,15 +15,18 @@ MCP_SERVER_HOST = "0.0.0.0"
 MCP_SERVER_PORT = 50051
 
 
-def run() -> None:
-    """Start the MCP server in a background process."""
+def _run() -> None:
     mcp = fastmcp.FastMCP(MCP_SERVER_NAME)
     mcp.add_tool(fastmcp_tools.Tool.from_function(tools.fingerprint))
     logger.info("Starting MCP server on %s:%s", MCP_SERVER_HOST, MCP_SERVER_PORT)
-    multiprocessing.set_start_method("spawn")
+    mcp.run(transport="http", host=MCP_SERVER_HOST, port=MCP_SERVER_PORT)
+
+
+def run() -> None:
+    """Start the MCP server in a background process."""
+
     mcp_process = multiprocessing.Process(
-        target=mcp.run,
-        kwargs={"transport": "http", "host": MCP_SERVER_HOST, "port": MCP_SERVER_PORT},
+        target=_run,
     )
     mcp_process.start()
 
