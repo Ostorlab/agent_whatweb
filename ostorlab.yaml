@@ -80,6 +80,7 @@ out_selectors:
  - v3.report.vulnerability
 docker_file_path: Dockerfile
 docker_build_root: .
+service_name: "whatweb"
 args:
  - name: port
    type: number
