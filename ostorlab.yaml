@@ -1,6 +1,6 @@
 kind: Agent
 name: whatweb
-version: 1.70.0
+version: 1.70.1
 image: images/logo.png
 description: |
  This repository is an implementation of [Ostorlab Agent](https://pypi.org/project/ostorlab/) for the [WhatWeb Fingerprinter](https://github.com/urbanadventurer/WhatWeb.git).
