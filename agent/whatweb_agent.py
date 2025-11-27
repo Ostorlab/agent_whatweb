@@ -12,7 +12,7 @@ import tempfile
 from typing import List, Optional, Dict, Any
 from urllib import parse
 
-# from agent.mcp_server import server as mcp_server
+from agent.mcp_server import server as mcp_server
 
 from ostorlab.agent import agent
 from ostorlab.agent import definitions as agent_definitions
@@ -126,7 +126,7 @@ class AgentWhatWeb(
         """Starts the agent and the MCP server if configured to do so."""
         if self._should_start_mcp_server is True:
             logger.info("Starting WhatWeb MCP server...")
-            # mcp_server.run()
+            mcp_server.run()
 
     def process(self, message: msg.Message) -> None:
         """Starts a whatweb scan, wait for the scan to finish,
