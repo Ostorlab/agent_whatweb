@@ -20,6 +20,7 @@ def run() -> None:
     mcp = fastmcp.FastMCP(MCP_SERVER_NAME)
     mcp.add_tool(fastmcp_tools.Tool.from_function(tools.fingerprint))
     logger.info("Starting MCP server on %s:%s", MCP_SERVER_HOST, MCP_SERVER_PORT)
+    multiprocessing.set_start_method("spawn")
     mcp_process = multiprocessing.Process(
         target=mcp.run,
         kwargs={"transport": "http", "host": MCP_SERVER_HOST, "port": MCP_SERVER_PORT},
