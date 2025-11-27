@@ -2,7 +2,6 @@
 
 import logging
 import subprocess
-import sys
 
 logger = logging.getLogger(__name__)
 
