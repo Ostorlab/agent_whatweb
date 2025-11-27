@@ -15,7 +15,7 @@ MCP_SERVER_HOST = "0.0.0.0"
 MCP_SERVER_PORT = 50051
 
 
-def _run():
+def _run() -> None:
     mcp = fastmcp.FastMCP(MCP_SERVER_NAME)
     mcp.add_tool(fastmcp_tools.Tool.from_function(tools.fingerprint))
     logger.info("Starting MCP server on %s:%s", MCP_SERVER_HOST, MCP_SERVER_PORT)
