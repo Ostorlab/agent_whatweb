@@ -12,7 +12,7 @@ import tempfile
 from typing import List, Optional, Dict, Any
 from urllib import parse
 
-from agent.mcp_server import server as mcp_server
+# from agent.mcp_server import server as mcp_server
 
 from ostorlab.agent import agent
 from ostorlab.agent import definitions as agent_definitions
