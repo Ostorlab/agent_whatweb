@@ -6,7 +6,7 @@ import subprocess
 logger = logging.getLogger(__name__)
 
 
-SERVER_PATH = "/app/agent/mcp_server/run_server.py"
+SERVER_PATH = "/app/agent/mcp_server/server.py"
 
 
 class MCPRunner:
