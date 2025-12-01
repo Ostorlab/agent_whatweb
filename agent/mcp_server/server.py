@@ -1,4 +1,4 @@
-"""WhatWeb MCP Server runner."""
+"""WhatWeb MCP Server."""
 
 import base64
 import json
