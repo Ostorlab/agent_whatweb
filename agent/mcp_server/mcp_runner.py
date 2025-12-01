@@ -20,15 +20,13 @@ class MCPRunner:
     def run(self) -> None:
         """Start the MCP server process."""
         logger.info("Starting MCP server.")
-        command = self._prepare_command()
-        subprocess.Popen(command)
-
-    def _prepare_command(self) -> list[str]:
+        env = {
+            "AGENT_VERSION": self._agent_version,
+            "UNIVERSE": self._universe,
+            "LOGGING_CREDENTIALS": self._logging_credentials,
+        }
         command: list[str] = [
             "python3.11",
             SERVER_PATH,
-            self._agent_version,
-            self._universe,
-            self._logging_credentials,
         ]
-        return command
+        subprocess.Popen(command, env=env)

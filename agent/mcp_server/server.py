@@ -3,7 +3,7 @@
 import base64
 import json
 import logging
-import sys
+import os
 
 import google.cloud.logging
 from google.oauth2 import service_account
@@ -20,14 +20,9 @@ MCP_SERVER_PORT = 50051
 
 
 def _configure_cloud_logging() -> None:
-    logging_credential: str = ""
-    universe: str = ""
-    version: str = ""
-
-    if len(sys.argv) >= 4:
-        version = sys.argv[1]
-        universe = sys.argv[2]
-        logging_credential = sys.argv[3]
+    logging_credential: str = os.environ.get("LOGGING_CREDENTIALS", "")
+    universe: str = os.environ.get("UNIVERSE", "")
+    version: str = os.environ.get("AGENT_VERSION", "")
 
     if logging_credential == "":
         logger.warning("Cloud logging is not configured.")
@@ -38,7 +33,7 @@ def _configure_cloud_logging() -> None:
     client = google.cloud.logging.Client(credentials=credentials)  # type: ignore[no-untyped-call]
     client.setup_logging(  # type: ignore[no-untyped-call]
         labels={
-            "agent_key": "monkey_tester",
+            "agent_key": "whatweb",
             "agent_version": version,
             "universe": universe,
         }
