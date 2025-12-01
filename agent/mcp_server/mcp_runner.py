@@ -1,4 +1,4 @@
-"""WhatWeb MCP Server - Exposes WhatWeb fingerprinting as MCP tools."""
+"""WhatWeb MCP server runner."""
 
 import logging
 import subprocess
