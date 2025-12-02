@@ -31,7 +31,7 @@ def _configure_cloud_logging(
     client = google.cloud.logging.Client(credentials=credentials)  # type: ignore[no-untyped-call]
     client.setup_logging(  # type: ignore[no-untyped-call]
         labels={
-            "agent_key": "monkey_tester",
+            "agent_key": "whatweb",
             "agent_version": version,
             "universe": universe,
         }
