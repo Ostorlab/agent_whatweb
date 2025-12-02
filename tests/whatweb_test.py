@@ -867,7 +867,7 @@ def testWhatWebAgent_whenMCPServerDisabled_startDoesNothing(
     mocker: plugin.MockerFixture,
 ) -> None:
     """Test that start method does nothing when MCP server is disabled."""
-    mcp_run_mock = mocker.patch("agent.mcp_server.server.run")
+    mcp_run_mock = mocker.patch("agent.mcp_server.mcp_runner.MCPRunner.run")
 
     whatweb_test_agent.start()
 
@@ -881,7 +881,7 @@ def testWhatWebAgent_whenMCPServerEnabled_startsServerAndSkipsProcessing(
     mocker: plugin.MockerFixture,
 ) -> None:
     """Test that when MCP server is enabled, start method starts server and process returns None."""
-    mcp_run_mock = mocker.patch("agent.mcp_server.server.run")
+    mcp_run_mock = mocker.patch("agent.mcp_server.mcp_runner.MCPRunner.run")
 
     whatweb_agent_with_mcp_server.start()
 

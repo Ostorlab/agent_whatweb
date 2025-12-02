@@ -6,13 +6,14 @@ import io
 import ipaddress
 import json
 import logging
+import os
 import re
 import subprocess
 import tempfile
 from typing import List, Optional, Dict, Any
 from urllib import parse
 
-from agent.mcp_server import server as mcp_server
+from agent.mcp_server import mcp_runner
 
 from ostorlab.agent import agent
 from ostorlab.agent import definitions as agent_definitions
@@ -125,8 +126,19 @@ class AgentWhatWeb(
     def start(self) -> None:
         """Starts the agent and the MCP server if configured to do so."""
         if self._should_start_mcp_server is True:
-            logger.info("Starting WhatWeb MCP server...")
-            mcp_server.run()
+            universe: str = os.environ.get("UNIVERSE", "")
+            logging_credentials: str = os.environ.get("GCP_LOGGING_CREDENTIAL", "")
+            version = self._agent_definition.version or ""
+
+            runner = mcp_runner.MCPRunner(
+                universe=universe,
+                agent_version=version,
+                logging_credentials=logging_credentials,
+            )
+            logger.info("Starting MCP server..")
+            runner.run()
+        else:
+            logger.info("MCP server mode is disabled.")
 
     def process(self, message: msg.Message) -> None:
         """Starts a whatweb scan, wait for the scan to finish,
