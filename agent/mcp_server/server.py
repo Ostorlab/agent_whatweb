@@ -3,8 +3,8 @@
 import base64
 import json
 import logging
-import os
 
+import click
 import google.cloud.logging
 from google.oauth2 import service_account
 import fastmcp
@@ -19,11 +19,9 @@ MCP_SERVER_HOST = "0.0.0.0"
 MCP_SERVER_PORT = 50051
 
 
-def _configure_cloud_logging() -> None:
-    logging_credential: str = os.environ.get("LOGGING_CREDENTIALS", "")
-    universe: str = os.environ.get("UNIVERSE", "")
-    version: str = os.environ.get("AGENT_VERSION", "")
-
+def _configure_cloud_logging(
+    logging_credential: str, universe: str, version: str
+) -> None:
     if logging_credential == "":
         logger.warning("Cloud logging is not configured.")
         return
@@ -33,7 +31,7 @@ def _configure_cloud_logging() -> None:
     client = google.cloud.logging.Client(credentials=credentials)  # type: ignore[no-untyped-call]
     client.setup_logging(  # type: ignore[no-untyped-call]
         labels={
-            "agent_key": "whatweb",
+            "agent_key": "monkey_tester",
             "agent_version": version,
             "universe": universe,
         }
@@ -48,7 +46,20 @@ def _run() -> None:
     mcp.run(transport="http", host=MCP_SERVER_HOST, port=MCP_SERVER_PORT)
 
 
-if __name__ == "__main__":
-    _configure_cloud_logging()
+@click.command()
+@click.option("--universe", default="")
+@click.option("--agent-version", default="")
+@click.option("--logging-credentials", default="")
+def main(universe: str, agent_version: str, logging_credentials: str) -> None:
+    """Run the MCP server."""
+    _configure_cloud_logging(
+        logging_credential=logging_credentials,
+        universe=universe,
+        version=agent_version,
+    )
     logger.info("Running mcp server..")
     _run()
+
+
+if __name__ == "__main__":
+    main()

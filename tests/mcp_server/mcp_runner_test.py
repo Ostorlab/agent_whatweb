@@ -24,12 +24,14 @@ def testMCPRunner_whenRun_shouldCallPopenWithCorrectCommand(
     expected_command = [
         "python3.11",
         mcp_runner.SERVER_PATH,
+        "--universe",
+        "test_universe",
+        "--agent-version",
+        "1.0.0",
+        "--logging-credentials",
+        "test_credentials",
     ]
+
     popen_mock.assert_called_once_with(
         expected_command,
-        env={
-            "UNIVERSE": "test_universe",
-            "AGENT_VERSION": "1.0.0",
-            "LOGGING_CREDENTIALS": "test_credentials",
-        },
     )
