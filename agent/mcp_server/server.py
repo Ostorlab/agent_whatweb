@@ -9,8 +9,21 @@ import google.cloud.logging
 from google.oauth2 import service_account
 import fastmcp
 from fastmcp import tools as fastmcp_tools
+from rich import logging as rich_logging
 
 from agent.mcp_server import tools
+
+
+logging.basicConfig(
+    format="%(message)s",
+    datefmt="[%X]",
+    handlers=[
+        rich_logging.RichHandler(rich_tracebacks=True),
+    ],
+    level="INFO",
+    force=True,
+)
+
 
 logger = logging.getLogger(__name__)
 
