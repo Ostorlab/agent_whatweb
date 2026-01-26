@@ -328,15 +328,11 @@ class AgentWhatWeb(
             logger.warning("Unsupported schema %s", parsed_url.scheme)
             return None
         schema = str(parsed_url.scheme) or str(self.args["schema"])
-        domain_name = parse.urlparse(url).netloc
-        port = None
-        if len(parsed_url.netloc.split(":")) > 1:
-            domain_name = parsed_url.netloc.split(":")[0]
-            port = (
-                int(parsed_url.netloc.split(":")[-1])
-                if parsed_url.netloc.split(":")[-1] is not None
-                else 0
-            )
+        domain_name = parsed_url.hostname or ""
+        try:
+            port = parsed_url.port
+        except ValueError:
+            port = None
         port = port or definitions.SCHEME_TO_PORT.get(schema) or self.args.get("port")
         target = DomainTarget(name=domain_name, schema=schema, port=port)
         return target

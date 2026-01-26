@@ -888,3 +888,26 @@ def testWhatWebAgent_whenMCPServerEnabled_startsServerAndSkipsProcessing(
     assert mcp_run_mock.call_count == 1
     whatweb_agent_with_mcp_server.process(domain_msg)
     assert len(agent_mock) == 0
+
+
+def testWhatWebAgent_whenUrlHasTrailingColon_shouldNotFail(
+    agent_mock: list[message.Message],
+    whatweb_test_agent: whatweb_agent.AgentWhatWeb,
+    mocker: plugin.MockerFixture,
+) -> None:
+    """Test that the agent handles URLs with trailing colons without crashing."""
+    input_selector = "v3.asset.link"
+    input_data = {"url": "http://example.com:", "method": "GET"}
+    link_msg = message.Message.from_data(selector=input_selector, data=input_data)
+
+    mocker.patch("subprocess.run", return_value=None)
+    with tempfile.TemporaryFile() as fp:
+        mocker.patch("tempfile.NamedTemporaryFile", return_value=fp)
+        with open(f"{pathlib.Path(__file__).parent}/output.json", "rb") as op:
+            fp.write(op.read())
+            fp.seek(0)
+
+            whatweb_test_agent.process(link_msg)
+
+            assert len(agent_mock) > 0
+            assert any(msg.data.get("name") == "example.com" for msg in agent_mock)
