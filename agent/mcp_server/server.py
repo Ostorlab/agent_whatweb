@@ -65,11 +65,13 @@ def _run() -> None:
 @click.option("--logging-credentials", default="")
 def main(universe: str, agent_version: str, logging_credentials: str) -> None:
     """Run the MCP server."""
-    _configure_cloud_logging(
-        logging_credential=logging_credentials,
-        universe=universe,
-        version=agent_version,
-    )
+
+    # TODO (Mohamed Nasser) - Fix GCP logging
+    # _configure_cloud_logging(
+    #    logging_credential=logging_credentials,
+    #    universe=universe,
+    #    version=agent_version,
+    # )
     logger.info("Running mcp server..")
     _run()
 
