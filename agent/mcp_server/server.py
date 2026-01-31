@@ -3,6 +3,7 @@
 import base64
 import json
 import logging
+import time
 
 import click
 import google.cloud.logging
@@ -49,6 +50,10 @@ def _configure_cloud_logging(
             "universe": universe,
         }
     )
+    # GCO logging initialization is lazy, we need to log inorder trigger the init.
+    # By default, GCP logging uses background thread, so we sleep to give it a chance to finish initialization
+    logger.info("Cloud logging is setup")
+    time.sleep(1)
 
 
 def _run() -> None:
@@ -66,12 +71,11 @@ def _run() -> None:
 def main(universe: str, agent_version: str, logging_credentials: str) -> None:
     """Run the MCP server."""
 
-    # TODO (Mohamed Nasser) - Fix GCP logging
-    # _configure_cloud_logging(
-    #    logging_credential=logging_credentials,
-    #    universe=universe,
-    #    version=agent_version,
-    # )
+    _configure_cloud_logging(
+        logging_credential=logging_credentials,
+        universe=universe,
+        version=agent_version,
+    )
     logger.info("Running mcp server..")
     _run()
 
