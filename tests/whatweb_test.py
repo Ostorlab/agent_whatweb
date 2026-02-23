@@ -64,6 +64,11 @@ def testWhatWebAgent_withDomainMsgAndAllChecksEnabled_emitsFingerprints(
             assert any(
                 vuln_msg.data.get("security_issue") is True for vuln_msg in agent_mock
             )
+            assert all(
+                fp.data.get("domain_name") == "ostorlab.co"
+                for fp in agent_mock
+                if fp.selector.startswith("v3.fingerprint.domain_name")
+            )
 
 
 def testWhatWebAgent_withLinkMsgAndAllChecksEnabled_emitsFingerprints(

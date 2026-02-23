@@ -457,6 +457,7 @@ class AgentWhatWeb(
                     target, library_name, version, fingerprint_type
                 )
                 if isinstance(target, DomainTarget):
+                    msg_data["domain_name"] = target.name
                     self.emit(
                         selector=definitions.DOMAIN_NAME_LIB_SELECTOR, data=msg_data
                     )
@@ -488,6 +489,7 @@ class AgentWhatWeb(
             # No version is found.
             msg_data = self._get_msg_data(target, library_name, None, fingerprint_type)
             if isinstance(target, DomainTarget):
+                msg_data["domain_name"] = target.name
                 self.emit(selector=definitions.DOMAIN_NAME_LIB_SELECTOR, data=msg_data)
             elif isinstance(target, IPTarget) and target.version == 4:
                 self.emit(selector=definitions.IP_V4_LIB_SELECTOR, data=msg_data)
