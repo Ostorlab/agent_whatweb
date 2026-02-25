@@ -23,15 +23,5 @@ Plugin.define do
       :regexp => /\/static_assets\/[a-f0-9]+\/saltcorn(?:-common)?\.js/,
       :name => "Saltcorn JavaScript bundle",
     },
-    {
-      :search => "body",
-      :regexp => /_sc_loglevel\s*=/,
-      :name => "Saltcorn runtime config (_sc_loglevel)",
-    },
-    {
-      :search => "body",
-      :regexp => /_sc_globalCsrf\s*=/,
-      :name => "Saltcorn CSRF token variable",
-    },
   ]
 end
