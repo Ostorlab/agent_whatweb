@@ -25,11 +25,6 @@ Plugin.define do
     },
     {
       :search => "body",
-      :regexp => /any-bootstrap-theme@([0-9][0-9.]*)/,
-      :name => "Saltcorn Bootstrap theme",
-    },
-    {
-      :search => "body",
       :regexp => /_sc_loglevel\s*=/,
       :name => "Saltcorn runtime config (_sc_loglevel)",
     },
