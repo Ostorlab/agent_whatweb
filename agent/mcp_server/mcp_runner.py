@@ -21,7 +21,7 @@ class MCPRunner:
         """Start the MCP server process."""
         logger.info("Starting MCP server.")
         command: list[str] = [
-            "python3.11",
+            "python3.14",
             SERVER_PATH,
             "--universe",
             self._universe,

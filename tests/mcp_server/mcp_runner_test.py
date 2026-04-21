@@ -22,7 +22,7 @@ def testMCPRunner_whenRun_shouldCallPopenWithCorrectCommand(
     runner.run()
 
     expected_command = [
-        "python3.11",
+        "python3.14",
         mcp_runner.SERVER_PATH,
         "--universe",
         "test_universe",
