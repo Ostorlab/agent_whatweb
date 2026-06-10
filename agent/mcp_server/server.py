@@ -34,8 +34,28 @@ MCP_SERVER_PORT = 50051
 
 
 def _configure_cloud_logging(
-    logging_credential: str, universe: str, version: str
+    logging_credential: str,
+    universe: str,
+    service_name: str,
+    agent_key: str,
+    hostname: str,
+    host_hostname: str,
+    version: str,
 ) -> None:
+    """Set up the logging configuration.
+
+    Args:
+        logging_credential: Logging credential of gcp logging.
+        universe: scan universe id.
+        service_name: Docker service name of the agent.
+        agent_key: Agent key.
+        hostname: Docker container hostname.
+        host_hostname: Scanner machine hostname.
+        version: agent version.
+
+    Returns:
+        None
+    """
     if logging_credential == "":
         logger.warning("Cloud logging is not configured.")
         return
@@ -45,9 +65,12 @@ def _configure_cloud_logging(
     client = google.cloud.logging.Client(credentials=credentials)  # type: ignore[no-untyped-call]
     client.setup_logging(  # type: ignore[no-untyped-call]
         labels={
-            "agent_key": "whatweb",
+            "agent_key": agent_key,
             "agent_version": version,
             "universe": universe,
+            "service_name": service_name,
+            "hostname": hostname,
+            "host_hostname": host_hostname,
         }
     )
     # GCO logging initialization is lazy, we need to log inorder trigger the init.
@@ -66,14 +89,30 @@ def _run() -> None:
 
 @click.command()
 @click.option("--universe", default="")
+@click.option("--service-name", default="")
+@click.option("--agent-key", default="")
+@click.option("--hostname", default="")
+@click.option("--host-hostname", default="")
 @click.option("--agent-version", default="")
 @click.option("--logging-credentials", default="")
-def main(universe: str, agent_version: str, logging_credentials: str) -> None:
+def main(
+    universe: str,
+    service_name: str,
+    agent_key: str,
+    hostname: str,
+    host_hostname: str,
+    agent_version: str,
+    logging_credentials: str,
+) -> None:
     """Run the MCP server."""
 
     _configure_cloud_logging(
         logging_credential=logging_credentials,
         universe=universe,
+        service_name=service_name,
+        agent_key=agent_key,
+        hostname=hostname,
+        host_hostname=host_hostname,
         version=agent_version,
     )
     logger.info("Running mcp server..")
