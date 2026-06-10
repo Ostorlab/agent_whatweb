@@ -127,11 +127,19 @@ class AgentWhatWeb(
         """Starts the agent and the MCP server if configured to do so."""
         if self._should_start_mcp_server is True:
             universe: str = os.environ.get("UNIVERSE", "")
+            service_name: str = os.environ.get("SERVICE_NAME", "")
+            hostname: str = os.environ.get("HOSTNAME", "")
+            host_hostname: str = os.environ.get("HOST_HOSTNAME", "")
             logging_credentials: str = os.environ.get("GCP_LOGGING_CREDENTIAL", "")
             version = self._agent_definition.version or ""
+            agent_key = self.settings.key or ""
 
             runner = mcp_runner.MCPRunner(
                 universe=universe,
+                service_name=service_name,
+                agent_key=agent_key,
+                hostname=hostname,
+                host_hostname=host_hostname,
                 agent_version=version,
                 logging_credentials=logging_credentials,
             )

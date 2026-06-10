@@ -11,9 +11,20 @@ SERVER_PATH = "/app/agent/mcp_server/server.py"
 
 class MCPRunner:
     def __init__(
-        self, universe: str, agent_version: str = "", logging_credentials: str = ""
+        self,
+        universe: str,
+        service_name: str,
+        agent_key: str,
+        hostname: str,
+        host_hostname: str,
+        agent_version: str = "",
+        logging_credentials: str = "",
     ) -> None:
         self._universe: str = universe
+        self._service_name: str = service_name
+        self._agent_key = agent_key
+        self._hostname = hostname
+        self._host_hostname = host_hostname
         self._agent_version: str = agent_version
         self._logging_credentials: str = logging_credentials
 
@@ -25,6 +36,14 @@ class MCPRunner:
             SERVER_PATH,
             "--universe",
             self._universe,
+            "--service-name",
+            self._service_name,
+            "--agent-key",
+            self._agent_key,
+            "--hostname",
+            self._hostname,
+            "--host-hostname",
+            self._host_hostname,
             "--agent-version",
             self._agent_version,
             "--logging-credentials",
