@@ -131,8 +131,8 @@ class AgentWhatWeb(
             hostname: str = os.environ.get("HOSTNAME", "")
             host_hostname: str = os.environ.get("HOST_HOSTNAME", "")
             logging_credentials: str = os.environ.get("GCP_LOGGING_CREDENTIAL", "")
-            version = self._agent_definition.version or ""
-            agent_key = self.settings.key or ""
+            version: str = self._agent_definition.version or ""
+            agent_key: str = self.settings.key or ""
 
             runner = mcp_runner.MCPRunner(
                 universe=universe,

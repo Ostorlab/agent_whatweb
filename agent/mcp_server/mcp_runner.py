@@ -22,9 +22,9 @@ class MCPRunner:
     ) -> None:
         self._universe: str = universe
         self._service_name: str = service_name
-        self._agent_key = agent_key
-        self._hostname = hostname
-        self._host_hostname = host_hostname
+        self._agent_key: str = agent_key
+        self._hostname: str = hostname
+        self._host_hostname: str = host_hostname
         self._agent_version: str = agent_version
         self._logging_credentials: str = logging_credentials
 
