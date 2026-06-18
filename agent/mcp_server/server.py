@@ -3,6 +3,7 @@
 import base64
 import json
 import logging
+import os
 import time
 
 import click
@@ -35,22 +36,14 @@ MCP_SERVER_PORT = 50051
 
 def _configure_cloud_logging(
     logging_credential: str,
-    universe: str,
-    service_name: str,
     agent_key: str,
-    hostname: str,
-    host_hostname: str,
     version: str,
 ) -> None:
     """Set up the logging configuration.
 
     Args:
         logging_credential: Logging credential of gcp logging.
-        universe: scan universe id.
-        service_name: Docker service name of the agent.
         agent_key: Agent key.
-        hostname: Docker container hostname.
-        host_hostname: Scanner machine hostname.
         version: agent version.
 
     Returns:
@@ -67,10 +60,10 @@ def _configure_cloud_logging(
         labels={
             "agent_key": agent_key,
             "agent_version": version,
-            "universe": universe,
-            "service_name": service_name,
-            "hostname": hostname,
-            "host_hostname": host_hostname,
+            "universe": os.environ.get("UNIVERSE", "") or "",
+            "service_name": os.environ.get("SERVICE_NAME", "") or "",
+            "hostname": os.environ.get("HOSTNAME", "") or "",
+            "host_hostname": os.environ.get("HOST_HOSTNAME", "") or "",
         }
     )
     # GCO logging initialization is lazy, we need to log inorder trigger the init.
@@ -88,33 +81,21 @@ def _run() -> None:
 
 
 @click.command()
-@click.option("--universe", default="")
-@click.option("--service-name", default="")
 @click.option("--agent-key", default="")
-@click.option("--hostname", default="")
-@click.option("--host-hostname", default="")
 @click.option("--agent-version", default="")
-@click.option("--logging-credentials", default="")
 def main(
-    universe: str,
-    service_name: str,
     agent_key: str,
-    hostname: str,
-    host_hostname: str,
     agent_version: str,
-    logging_credentials: str,
 ) -> None:
     """Run the MCP server."""
 
-    _configure_cloud_logging(
-        logging_credential=logging_credentials,
-        universe=universe,
-        service_name=service_name,
-        agent_key=agent_key,
-        hostname=hostname,
-        host_hostname=host_hostname,
-        version=agent_version,
-    )
+    logging_credentials = os.environ.get("GCP_LOGGING_CREDENTIAL")
+    if logging_credentials is not None:
+        _configure_cloud_logging(
+            logging_credential=logging_credentials,
+            agent_key=agent_key,
+            version=agent_version,
+        )
     logger.info("Running mcp server..")
     _run()
 
