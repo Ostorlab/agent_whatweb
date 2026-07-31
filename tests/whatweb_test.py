@@ -700,7 +700,7 @@ def testWhatWebAgent_withIPv4AndMaskButNoVersion_shouldHandleVersionCorrectly(
     assert len(calls) == len(expected_ips)
 
     for call, expected_ip in zip(calls, expected_ips):
-        args, kwargs = call
+        args, _kwargs = call
         command = args[0]
         assert any(expected_ip in arg for arg in command), (
             f"Expected IP {expected_ip} not found in command {command}"
