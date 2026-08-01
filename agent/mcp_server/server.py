@@ -7,14 +7,13 @@ import os
 import time
 
 import click
-import google.cloud.logging
-from google.oauth2 import service_account
 import fastmcp
+import google.cloud.logging
 from fastmcp import tools as fastmcp_tools
+from google.oauth2 import service_account
 from rich import logging as rich_logging
 
 from agent.mcp_server import tools
-
 
 logging.basicConfig(
     format="%(message)s",

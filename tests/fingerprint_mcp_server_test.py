@@ -6,8 +6,7 @@ import subprocess
 import pytest
 from pytest_mock import plugin
 
-from agent import definitions
-from agent import whatweb_utils
+from agent import definitions, whatweb_utils
 from agent.mcp_server import tools
 
 TESTS_DIR = pathlib.Path(__file__).parent

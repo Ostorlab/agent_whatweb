@@ -9,10 +9,8 @@ import logging
 import re
 import subprocess
 import tempfile
-from typing import List, Optional, Dict, Any
+from typing import Any
 from urllib import parse
-
-from agent.mcp_server import mcp_runner
 
 from ostorlab.agent import agent
 from ostorlab.agent import definitions as agent_definitions
@@ -27,6 +25,7 @@ from ostorlab.runtimes import definitions as runtime_definitions
 from rich import logging as rich_logging
 
 from agent import definitions
+from agent.mcp_server import mcp_runner
 
 logging.basicConfig(
     format="%(message)s",
@@ -62,8 +61,8 @@ class DomainTarget(BaseTarget):
     """Domain target."""
 
     name: str
-    schema: Optional[str] = None
-    port: Optional[int] = None
+    schema: str | None = None
+    port: int | None = None
 
     @property
     def target(self) -> str:
@@ -86,8 +85,8 @@ class IPTarget(BaseTarget):
 
     name: str
     version: int
-    schema: Optional[str] = None
-    port: Optional[int] = None
+    schema: str | None = None
+    port: int | None = None
 
     @property
     def target(self) -> str:
@@ -117,7 +116,7 @@ class AgentWhatWeb(
         agent.Agent.__init__(self, agent_definition, agent_settings)
         vuln_mixin.AgentReportVulnMixin.__init__(self)
         persist_mixin.AgentPersistMixin.__init__(self, agent_settings)
-        self._scope_domain_regex: Optional[str] = self.args.get("scope_domain_regex")
+        self._scope_domain_regex: str | None = self.args.get("scope_domain_regex")
         self._should_start_mcp_server: bool = self.args.get(
             "should_start_mcp_server", False
         )
@@ -162,9 +161,9 @@ class AgentWhatWeb(
             except subprocess.CalledProcessError as e:
                 logger.error("Error scanning target `%s`: %s", target, e)
 
-    def _prepare_targets(self, message: msg.Message) -> List[IPTarget | DomainTarget]:
+    def _prepare_targets(self, message: msg.Message) -> list[IPTarget | DomainTarget]:
         """Returns a list of target objects to be scanned."""
-        targets: List[DomainTarget | IPTarget] = []
+        targets: list[DomainTarget | IPTarget] = []
         domain_targets = self._prepare_domain_targets(message)
         ip_targets = self._prepare_ip_targets(message)
         targets.extend(domain_targets)
@@ -187,9 +186,9 @@ class AgentWhatWeb(
         else:
             return str(self.args["schema"])
 
-    def _prepare_domain_targets(self, message: msg.Message) -> List[DomainTarget]:
+    def _prepare_domain_targets(self, message: msg.Message) -> list[DomainTarget]:
         """Returns a list of domain targets to be scanned."""
-        targets: List[DomainTarget] = []
+        targets: list[DomainTarget] = []
         if message.data.get("url") is not None:
             url_target = self._get_target_from_url(message.data["url"])
             if url_target is not None:
@@ -204,9 +203,9 @@ class AgentWhatWeb(
             targets.append(domain_target)
         return targets
 
-    def _prepare_ip_targets(self, message: msg.Message) -> List[IPTarget]:
+    def _prepare_ip_targets(self, message: msg.Message) -> list[IPTarget]:
         """Returns a list of ip targets to be scanned."""
-        targets: List[IPTarget] = []
+        targets: list[IPTarget] = []
         host = message.data.get("host")
         mask = message.data.get("mask")
         if host is None:
@@ -426,8 +425,8 @@ class AgentWhatWeb(
     def _send_detected_fingerprints(
         self,
         target: DomainTarget | IPTarget,
-        library_name: Optional[str] = None,
-        versions: Optional[List[Optional[str]]] = None,
+        library_name: str | None = None,
+        versions: list[str | None] | None = None,
     ) -> None:
         """Emits the identified fingerprints.
 
@@ -476,7 +475,7 @@ class AgentWhatWeb(
                         targeted_by_ransomware=False,
                         targeted_by_nation_state=False,
                     ),
-                    technical_detail=f"Found fingerprint `{library_name}`, version `{str(version)}`, "
+                    technical_detail=f"Found fingerprint `{library_name}`, version `{version!s}`, "
                     f"of type `{fingerprint_type}` in target `{target.name}`",
                     risk_rating=vuln_mixin.RiskRating.INFO,
                     vulnerability_location=vulnerable_target_data,
@@ -514,12 +513,12 @@ class AgentWhatWeb(
     def _get_msg_data(
         self,
         target: DomainTarget | IPTarget,
-        library_name: Optional[str] = None,
-        version: Optional[str] = None,
-        fingerprint_type: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        library_name: str | None = None,
+        version: str | None = None,
+        fingerprint_type: str | None = None,
+    ) -> dict[str, Any]:
         """Prepare  data of the library proto message to be emitted."""
-        msg_data: Dict[str, Any] = {}
+        msg_data: dict[str, Any] = {}
         if target.name is not None:
             if isinstance(target, DomainTarget):
                 msg_data["name"] = target.name
@@ -537,7 +536,7 @@ class AgentWhatWeb(
         if version is not None:
             msg_data["library_version"] = str(version)
             detail = (
-                f"Found fingerprint `{library_name}`, version `{str(version)}`, of type"
+                f"Found fingerprint `{library_name}`, version `{version!s}`, of type"
             )
             detail = f"{detail} `{fingerprint_type}` in target `{target.name}`"
             msg_data["detail"] = detail

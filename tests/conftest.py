@@ -1,15 +1,14 @@
 """Pytest fixture for the whatweb agent."""
 
-import pytest
 import json
 import pathlib
-from typing import Dict, Union
 import random
 
+import pytest
 from ostorlab.agent import definitions as agent_definitions
+from ostorlab.agent.message import message as m
 from ostorlab.runtimes import definitions as runtime_definitions
 from ostorlab.utils import definitions
-from ostorlab.agent.message import message as m
 
 from agent import whatweb_agent
 
@@ -100,7 +99,7 @@ def ip_tcp_message() -> m.Message:
 
 @pytest.fixture(scope="function")
 def whatweb_test_agent(
-    agent_persist_mock: Dict[Union[str, bytes], Union[str, bytes]],
+    agent_persist_mock: dict[str | bytes, str | bytes],
 ) -> whatweb_agent.AgentWhatWeb:
     """WhatWeb Agent fixture for testing purposes."""
     del agent_persist_mock
@@ -126,7 +125,7 @@ def whatweb_test_agent(
 
 @pytest.fixture(scope="function")
 def whatweb_agent_with_scope_arg(
-    agent_persist_mock: Dict[Union[str, bytes], Union[str, bytes]],
+    agent_persist_mock: dict[str | bytes, str | bytes],
 ) -> whatweb_agent.AgentWhatWeb:
     """WhatWeb Agent fixture for testing purposes."""
     del agent_persist_mock
@@ -214,7 +213,7 @@ def scan_message_ipv_with_incorrect_version() -> m.Message:
 
 @pytest.fixture(scope="function")
 def whatweb_agent_with_mcp_server(
-    agent_persist_mock: Dict[Union[str, bytes], Union[str, bytes]],
+    agent_persist_mock: dict[str | bytes, str | bytes],
 ) -> whatweb_agent.AgentWhatWeb:
     """WhatWeb Agent fixture with MCP server enabled for testing purposes."""
     del agent_persist_mock
