@@ -1096,7 +1096,9 @@ def testWhatWebAgent_whenDestinationIsVeryLong_capsTheDetailLength(
 
     redirect_msgs = [m for m in agent_mock if m.data.get("library_name") == "redirect"]
     assert len(redirect_msgs) == 1
-    assert len(redirect_msgs[0].data.get("detail")) == 2048
+    detail = redirect_msgs[0].data.get("detail")
+    assert detail is not None
+    assert len(detail) == 2048
 
 
 def testWhatWebAgent_whenFirstLocationIsSameHostAndSecondIsCrossHost_emitsTheCrossHostRedirect(
