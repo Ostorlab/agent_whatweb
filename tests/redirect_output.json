@@ -1,2 +1,2 @@
-["http://rexelsolutions.com",301,[["HTTPServer",[{"name":"server string","string":"nginx","certainty":100}]],["RedirectLocation",[{"name":"location","string":"http://www.rexel.com/","certainty":100}]]]]
-["http://www.rexel.com/",200,[["PHP",[{"version":["8.3.36"],"certainty":100}]]]]
+["http://old-site.example.com",301,[["HTTPServer",[{"name":"server string","string":"nginx","certainty":100}]],["RedirectLocation",[{"name":"location","string":"http://www.example.org/","certainty":100}]]]]
+["http://www.example.org/",200,[["PHP",[{"version":["8.3.36"],"certainty":100}]]]]

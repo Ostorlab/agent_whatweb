@@ -957,7 +957,7 @@ def testWhatWebAgent_whenTargetRedirectsToAnotherHost_emitsRedirectFingerprint(
             ]
             assert len(redirect_msgs) == 1
             assert redirect_msgs[0].data.get("library_version") == "301"
-            assert redirect_msgs[0].data.get("detail") == "http://www.rexel.com/"
+            assert redirect_msgs[0].data.get("detail") == "http://www.example.org/"
             assert redirect_msgs[0].data.get("name") == "ostorlab.co"
             assert any(m.data.get("library_name") == "PHP" for m in agent_mock)
 
