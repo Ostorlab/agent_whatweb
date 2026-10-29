@@ -46,6 +46,16 @@ statistic/analytics packages, JavaScript libraries, web servers, embedded device
 account IDs, web framework modules, SQL errors, and more."""
 
 
+def _normalize_host(host: str | None) -> str | None:
+    """Lowercase a hostname and drop a leading `www.`, so `example.com` and `www.example.com` compare equal."""
+    if host is None:
+        return None
+    host = host.lower()
+    if host.startswith("www."):
+        return host[len("www.") :]
+    return host
+
+
 class BaseTarget(abc.ABC):
     """Base target with a target property for use by the Whatweb binary."""
 
@@ -359,8 +369,11 @@ class AgentWhatWeb(
             if file_contents is None or len(file_contents) == 0:
                 return
 
-            for file_content in file_contents:
+            for line_index, file_content in enumerate(file_contents):
                 results = json.loads(file_content)
+                # The first line is the scanned target itself, later lines are the hops it redirects to.
+                if line_index == 0:
+                    self._emit_redirect_fingerprint(target, results)
                 for result in results:
                     if isinstance(result, list):
                         for list_plugin in result:
@@ -393,6 +406,68 @@ class AgentWhatWeb(
             logger.error(
                 "Exception while processing %s with message %s", output_file, e
             )
+
+    def _get_redirect_target(self, results: list[Any]) -> tuple[int, str] | None:
+        """Extract the status code and the resolved destination of a cross-host redirect.
+
+        Args:
+            results: One parsed WhatWeb output line, `[url, status_code, plugins]`.
+
+        Returns:
+            The status code and the absolute destination URL, or None when the response is not a redirect or
+            when it stays on the same host (a plain http to https or path redirect).
+        """
+        if len(results) < 3:
+            return None
+        url, status_code, plugins = results[0], results[1], results[2]
+        if (
+            isinstance(url, str) is False
+            or isinstance(status_code, int) is False
+            or isinstance(plugins, list) is False
+        ):
+            return None
+        if status_code < 300 or status_code >= 400:
+            return None
+
+        for plugin in plugins:
+            if len(plugin) < 2 or plugin[0] != "RedirectLocation":
+                continue
+            for value in plugin[1]:
+                location = value.get("string")
+                if isinstance(location, list) is True and len(location) > 0:
+                    location = location[0]
+                if isinstance(location, str) is False or len(location) == 0:
+                    continue
+                destination = parse.urljoin(url, location)
+                source_host = _normalize_host(parse.urlparse(url).hostname)
+                destination_host = _normalize_host(parse.urlparse(destination).hostname)
+                if destination_host is None or destination_host == source_host:
+                    return None
+                return status_code, destination
+        return None
+
+    def _emit_redirect_fingerprint(
+        self, target: DomainTarget | IPTarget, results: list[Any]
+    ) -> None:
+        """Emit a `redirect` fingerprint holding the status code and destination of the target's own redirect."""
+        redirect = self._get_redirect_target(results)
+        if redirect is None:
+            return
+        status_code, destination = redirect
+        logger.info("Found redirect %s %s %s", target.name, status_code, destination)
+        msg_data = self._get_msg_data(
+            target,
+            definitions.REDIRECT_FINGERPRINT_NAME,
+            str(status_code),
+            definitions.DEFAULT_FINGERPRINT_TYPE,
+            detail_override=destination,
+        )
+        if isinstance(target, DomainTarget):
+            self.emit(selector=definitions.DOMAIN_NAME_LIB_SELECTOR, data=msg_data)
+        elif isinstance(target, IPTarget) and target.version == 4:
+            self.emit(selector=definitions.IP_V4_LIB_SELECTOR, data=msg_data)
+        elif isinstance(target, IPTarget) and target.version == 6:
+            self.emit(selector=definitions.IP_V6_LIB_SELECTOR, data=msg_data)
 
     def _prepare_vulnerable_target_data(
         self, target: DomainTarget | IPTarget
@@ -516,8 +591,12 @@ class AgentWhatWeb(
         library_name: str | None = None,
         version: str | None = None,
         fingerprint_type: str | None = None,
+        detail_override: str | None = None,
     ) -> dict[str, Any]:
-        """Prepare  data of the library proto message to be emitted."""
+        """Prepare  data of the library proto message to be emitted.
+
+        A `detail_override` given by the caller replaces the generated description.
+        """
         msg_data: dict[str, Any] = {}
         if target.name is not None:
             if isinstance(target, DomainTarget):
@@ -544,6 +623,8 @@ class AgentWhatWeb(
             detail = f"Found fingerprint `{library_name}`, of type `{fingerprint_type}`"
             detail = f"{detail} in target `{target.name}`"
             msg_data["detail"] = detail
+        if detail_override is not None:
+            msg_data["detail"] = detail_override
         return msg_data
 
 

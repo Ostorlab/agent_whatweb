@@ -934,3 +934,51 @@ def testWhatWebAgent_whenUrlHasInvalidPort_shouldNotFail(
 
             assert len(agent_mock) > 0
             assert any(msg.data.get("name") == "example.com" for msg in agent_mock)
+
+
+def testWhatWebAgent_whenTargetRedirectsToAnotherHost_emitsRedirectFingerprint(
+    agent_mock: list[message.Message],
+    whatweb_test_agent: whatweb_agent.AgentWhatWeb,
+    domain_msg: message.Message,
+    mocker: plugin.MockerFixture,
+) -> None:
+    """The first hop's cross-host redirect is emitted as a `redirect` fingerprint holding its status and target."""
+    mocker.patch("subprocess.run", return_value=None)
+    with tempfile.TemporaryFile() as fp:
+        mocker.patch("tempfile.NamedTemporaryFile", return_value=fp)
+        with open(f"{pathlib.Path(__file__).parent}/redirect_output.json", "rb") as op:
+            fp.write(op.read())
+            fp.seek(0)
+
+            whatweb_test_agent.process(domain_msg)
+
+            redirect_msgs = [
+                m for m in agent_mock if m.data.get("library_name") == "redirect"
+            ]
+            assert len(redirect_msgs) == 1
+            assert redirect_msgs[0].data.get("library_version") == "301"
+            assert redirect_msgs[0].data.get("detail") == "http://www.rexel.com/"
+            assert redirect_msgs[0].data.get("name") == "ostorlab.co"
+            assert any(m.data.get("library_name") == "PHP" for m in agent_mock)
+
+
+def testWhatWebAgent_whenTargetRedirectsWithinSameHost_doesNotEmitRedirectFingerprint(
+    agent_mock: list[message.Message],
+    whatweb_test_agent: whatweb_agent.AgentWhatWeb,
+    domain_msg: message.Message,
+    mocker: plugin.MockerFixture,
+) -> None:
+    """An http to https or www redirect on the same host is not a redirect to another site."""
+    mocker.patch("subprocess.run", return_value=None)
+    with tempfile.TemporaryFile() as fp:
+        mocker.patch("tempfile.NamedTemporaryFile", return_value=fp)
+        with open(
+            f"{pathlib.Path(__file__).parent}/same_host_redirect_output.json", "rb"
+        ) as op:
+            fp.write(op.read())
+            fp.seek(0)
+
+            whatweb_test_agent.process(domain_msg)
+
+            assert len(agent_mock) > 0
+            assert all(m.data.get("library_name") != "redirect" for m in agent_mock)

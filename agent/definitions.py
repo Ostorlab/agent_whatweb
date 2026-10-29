@@ -31,6 +31,10 @@ BLACKLISTED_PLUGINS = [
 
 DEFAULT_FINGERPRINT_TYPE = "BACKEND_COMPONENT"
 
+# Name of the fingerprint emitted when the target redirects to another host. Its version is the HTTP status code
+# and its detail is the destination URL.
+REDIRECT_FINGERPRINT_NAME = "redirect"
+
 FINGERPRINT_TYPE_MAP: dict[str, str] = {"jquery": "JAVASCRIPT_LIBRARY"}
 
 SCHEME_TO_PORT: dict[str, int] = {"http": 80, "https": 443}

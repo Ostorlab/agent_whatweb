@@ -1,0 +1,2 @@
+["http://example.com",301,[["RedirectLocation",[{"name":"location","string":"https://www.example.com/","certainty":100}]]]]
+["https://www.example.com/",200,[["HTTPServer",[{"name":"server string","string":"nginx","certainty":100}]]]]
