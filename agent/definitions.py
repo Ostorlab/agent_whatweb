@@ -34,6 +34,8 @@ DEFAULT_FINGERPRINT_TYPE = "BACKEND_COMPONENT"
 # Name of the fingerprint emitted when the target redirects to another host. Its version is the HTTP status code
 # and its detail is the destination URL.
 REDIRECT_FINGERPRINT_NAME = "redirect"
+# The destination is stored in the fingerprint detail (4096 characters in the backend), keep it well below.
+REDIRECT_DESTINATION_MAX_LENGTH = 2048
 
 FINGERPRINT_TYPE_MAP: dict[str, str] = {"jquery": "JAVASCRIPT_LIBRARY"}
 

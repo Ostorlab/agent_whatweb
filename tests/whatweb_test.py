@@ -1,5 +1,6 @@
 """Unittests for whatweb agent."""
 
+import json
 import pathlib
 import subprocess
 import tempfile
@@ -982,3 +983,144 @@ def testWhatWebAgent_whenTargetRedirectsWithinSameHost_doesNotEmitRedirectFinger
 
             assert len(agent_mock) > 0
             assert all(m.data.get("library_name") != "redirect" for m in agent_mock)
+
+
+def _scan_with_output(
+    agent: whatweb_agent.AgentWhatWeb,
+    mocker: plugin.MockerFixture,
+    msg: message.Message,
+    output_lines: list[Any],
+) -> None:
+    """Run the agent on a message with the given WhatWeb output lines instead of calling the WhatWeb binary."""
+    mocker.patch("subprocess.run", return_value=None)
+    with tempfile.TemporaryFile() as fp:
+        mocker.patch("tempfile.NamedTemporaryFile", return_value=fp)
+        fp.write("\n".join(json.dumps(line) for line in output_lines).encode() + b"\n")
+        fp.seek(0)
+        agent.process(msg)
+
+
+def testWhatWebAgent_whenLocationIsMalformed_stillEmitsOtherFingerprints(
+    agent_mock: list[message.Message],
+    whatweb_test_agent: whatweb_agent.AgentWhatWeb,
+    domain_msg: message.Message,
+    mocker: plugin.MockerFixture,
+) -> None:
+    """A malformed Location from the scanned site must not drop the target's other fingerprints."""
+    output_lines = [
+        [
+            "http://old-site.example.com",
+            301,
+            [
+                ["HTTPServer", [{"string": "nginx"}]],
+                ["RedirectLocation", [{"name": "location", "string": "http://[bad"}]],
+            ],
+        ]
+    ]
+
+    _scan_with_output(whatweb_test_agent, mocker, domain_msg, output_lines)
+
+    assert any(m.data.get("library_name") == "nginx" for m in agent_mock)
+    assert all(m.data.get("library_name") != "redirect" for m in agent_mock)
+
+
+def testWhatWebAgent_whenRedirectPluginHasUnexpectedShape_doesNotRaise(
+    agent_mock: list[message.Message],
+    whatweb_test_agent: whatweb_agent.AgentWhatWeb,
+    domain_msg: message.Message,
+    mocker: plugin.MockerFixture,
+) -> None:
+    """Unexpected values in the RedirectLocation plugin are skipped."""
+    output_lines = [
+        [
+            "http://old-site.example.com",
+            301,
+            [
+                ["HTTPServer", [{"string": "nginx"}]],
+                ["RedirectLocation", ["not-a-dict", {"string": 42}, {"string": []}]],
+            ],
+        ]
+    ]
+
+    _scan_with_output(whatweb_test_agent, mocker, domain_msg, output_lines)
+
+    assert any(m.data.get("library_name") == "nginx" for m in agent_mock)
+    assert all(m.data.get("library_name") != "redirect" for m in agent_mock)
+
+
+def testWhatWebAgent_whenDestinationHasQueryFragmentAndCredentials_keepsOnlySchemeHostPortAndPath(
+    agent_mock: list[message.Message],
+    whatweb_test_agent: whatweb_agent.AgentWhatWeb,
+    domain_msg: message.Message,
+    mocker: plugin.MockerFixture,
+) -> None:
+    """Query strings, fragments and credentials of the destination can hold tokens and are not stored."""
+    location = (
+        "https://user:secret@login.example.net:8443/sso/start?code=TOKEN&state=abc#frag"
+    )
+    output_lines = [
+        [
+            "http://old-site.example.com",
+            302,
+            [["RedirectLocation", [{"name": "location", "string": location}]]],
+        ]
+    ]
+
+    _scan_with_output(whatweb_test_agent, mocker, domain_msg, output_lines)
+
+    redirect_msgs = [m for m in agent_mock if m.data.get("library_name") == "redirect"]
+    assert len(redirect_msgs) == 1
+    assert (
+        redirect_msgs[0].data.get("detail")
+        == "https://login.example.net:8443/sso/start"
+    )
+
+
+def testWhatWebAgent_whenDestinationIsVeryLong_capsTheDetailLength(
+    agent_mock: list[message.Message],
+    whatweb_test_agent: whatweb_agent.AgentWhatWeb,
+    domain_msg: message.Message,
+    mocker: plugin.MockerFixture,
+) -> None:
+    """A huge Location must not exceed the length the backend stores."""
+    location = "https://login.example.net/" + "a" * 10000
+    output_lines = [
+        [
+            "http://old-site.example.com",
+            302,
+            [["RedirectLocation", [{"name": "location", "string": location}]]],
+        ]
+    ]
+
+    _scan_with_output(whatweb_test_agent, mocker, domain_msg, output_lines)
+
+    redirect_msgs = [m for m in agent_mock if m.data.get("library_name") == "redirect"]
+    assert len(redirect_msgs) == 1
+    assert len(redirect_msgs[0].data.get("detail")) == 2048
+
+
+def testWhatWebAgent_whenFirstLocationIsSameHostAndSecondIsCrossHost_emitsTheCrossHostRedirect(
+    agent_mock: list[message.Message],
+    whatweb_test_agent: whatweb_agent.AgentWhatWeb,
+    domain_msg: message.Message,
+    mocker: plugin.MockerFixture,
+) -> None:
+    """A same-host value must not hide a later cross-host value of the same plugin."""
+    output_lines = [
+        [
+            "http://old-site.example.com",
+            301,
+            [
+                [
+                    "RedirectLocation",
+                    [{"string": "/login"}, {"string": "https://new-site.example.org/"}],
+                ]
+            ],
+        ]
+    ]
+
+    _scan_with_output(whatweb_test_agent, mocker, domain_msg, output_lines)
+
+    redirect_msgs = [m for m in agent_mock if m.data.get("library_name") == "redirect"]
+    assert len(redirect_msgs) == 1
+    assert redirect_msgs[0].data.get("detail") == "https://new-site.example.org/"

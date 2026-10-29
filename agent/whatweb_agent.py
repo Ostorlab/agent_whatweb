@@ -46,6 +46,30 @@ statistic/analytics packages, JavaScript libraries, web servers, embedded device
 account IDs, web framework modules, SQL errors, and more."""
 
 
+def _clean_redirect_destination(destination: str) -> str | None:
+    """Reduce a redirect destination to its scheme, host, port and path.
+
+    The query string and the fragment can carry session tokens or authorization codes, and the userinfo part can
+    hold credentials, so none of them is kept. The result is capped to the maximum destination length.
+
+    Returns:
+        The cleaned URL, or None when the destination cannot be parsed or has no host.
+    """
+    try:
+        parts = parse.urlsplit(destination)
+        host = parts.hostname
+        port = parts.port
+    except ValueError:
+        return None
+    if host is None or parts.scheme == "":
+        return None
+    if ":" in host:
+        host = f"[{host}]"
+    netloc = host if port is None else f"{host}:{port}"
+    cleaned = parse.urlunsplit((parts.scheme, netloc, parts.path, "", ""))
+    return cleaned[: definitions.REDIRECT_DESTINATION_MAX_LENGTH]
+
+
 def _normalize_host(host: str | None) -> str | None:
     """Lowercase a hostname and drop a leading `www.`, so `example.com` and `www.example.com` compare equal."""
     if host is None:
@@ -408,14 +432,17 @@ class AgentWhatWeb(
             )
 
     def _get_redirect_target(self, results: list[Any]) -> tuple[int, str] | None:
-        """Extract the status code and the resolved destination of a cross-host redirect.
+        """Extract the status code and the cleaned destination of a cross-host redirect.
+
+        The `Location` value comes from the scanned site, so a malformed or unexpected value is skipped instead of
+        raising, and the other fingerprints of the target are still emitted.
 
         Args:
             results: One parsed WhatWeb output line, `[url, status_code, plugins]`.
 
         Returns:
-            The status code and the absolute destination URL, or None when the response is not a redirect or
-            when it stays on the same host (a plain http to https or path redirect).
+            The status code and the destination URL (scheme, host, port and path only), or None when the response is
+            not a redirect or when it stays on the same host (a plain http to https or path redirect).
         """
         if len(results) < 3:
             return None
@@ -430,20 +457,40 @@ class AgentWhatWeb(
             return None
 
         for plugin in plugins:
-            if len(plugin) < 2 or plugin[0] != "RedirectLocation":
+            if (
+                isinstance(plugin, list) is False
+                or len(plugin) < 2
+                or plugin[0] != "RedirectLocation"
+                or isinstance(plugin[1], list) is False
+            ):
                 continue
             for value in plugin[1]:
+                if isinstance(value, dict) is False:
+                    continue
                 location = value.get("string")
                 if isinstance(location, list) is True and len(location) > 0:
                     location = location[0]
                 if isinstance(location, str) is False or len(location) == 0:
                     continue
-                destination = parse.urljoin(url, location)
-                source_host = _normalize_host(parse.urlparse(url).hostname)
-                destination_host = _normalize_host(parse.urlparse(destination).hostname)
-                if destination_host is None or destination_host == source_host:
-                    return None
-                return status_code, destination
+                try:
+                    destination = parse.urljoin(url, location)
+                    source_host = _normalize_host(parse.urlparse(url).hostname)
+                    destination_host = _normalize_host(
+                        parse.urlparse(destination).hostname
+                    )
+                except ValueError:
+                    logger.warning("Ignoring a malformed redirect location.")
+                    continue
+                if (
+                    source_host is None
+                    or destination_host is None
+                    or destination_host == source_host
+                ):
+                    continue
+                cleaned_destination = _clean_redirect_destination(destination)
+                if cleaned_destination is None:
+                    continue
+                return status_code, cleaned_destination
         return None
 
     def _emit_redirect_fingerprint(
