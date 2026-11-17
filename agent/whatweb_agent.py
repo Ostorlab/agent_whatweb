@@ -375,18 +375,22 @@ class AgentWhatWeb(
                                 values = list_plugin[1]
                                 versions = []
                                 library_name = plugin
+                                is_technology = True
                                 for value in values:
                                     if "version" in value:
                                         if isinstance(value["version"], list):
                                             versions.extend(value["version"])
                                         else:
                                             versions.append(value["version"])
-                                    # Some plugins (e.g. HttpOnly) report a list of matched values, not a name.
-                                    if isinstance(value.get("string"), str):
-                                        library_name = value["string"]
-                                self._send_detected_fingerprints(
-                                    target, library_name, versions
-                                )
+                                    # Some plugins (e.g. HttpOnly) report a list of matched values, not a technology.
+                                    if isinstance(value.get("string"), list):
+                                        is_technology = False
+                                    elif "string" in value:
+                                        library_name = str(value["string"])
+                                if is_technology is True:
+                                    self._send_detected_fingerprints(
+                                        target, library_name, versions
+                                    )
                     else:
                         logger.warning("found result non list %s", result)
                 logger.info("Scan is done Parsing the results from %s.", output_file)

@@ -375,7 +375,7 @@ def testWhatWebAgent_whenIpMsgHasPortAndSchemaAndMask_emitsFingerprints(
             fp.write(op.read())
             fp.seek(0)
             whatweb_test_agent.process(ip_msg_with_port_schema_mask)
-            assert len(agent_mock) == 52
+            assert len(agent_mock) == 44
             assert any(
                 fingerprint_msg.data.get("port") == 80 for fingerprint_msg in agent_mock
             )
@@ -408,7 +408,7 @@ def testWhatWebAgent_whenIpMsgHasPortAndSchemaAndMask_emitsFingerprints(
         mocker.patch("tempfile.NamedTemporaryFile", return_value=fp)
         with open(f"{pathlib.Path(__file__).parent}/ip_output.json", "rb") as op:
             whatweb_test_agent.process(ip_msg_with_port_schema_mask)
-            assert len(agent_mock) == 52
+            assert len(agent_mock) == 44
 
 
 def testWhatWebAgent_whenWhatWebReturnsError_ContinueProcessing(
@@ -936,13 +936,13 @@ def testWhatWebAgent_whenUrlHasInvalidPort_shouldNotFail(
             assert any(msg.data.get("name") == "example.com" for msg in agent_mock)
 
 
-def testWhatWebAgent_whenPluginStringIsList_emitsPluginNameAsLibraryName(
+def testWhatWebAgent_whenPluginStringIsList_skipsTheFingerprint(
     agent_mock: list[message.Message],
     whatweb_test_agent: whatweb_agent.AgentWhatWeb,
     domain_msg: message.Message,
     mocker: plugin.MockerFixture,
 ) -> None:
-    """The HttpOnly plugin reports cookie names as a list in `string`, the library name must not be that list."""
+    """A plugin reporting matched values as a list in `string` (HttpOnly cookie names) is not a technology."""
     mocker.patch("subprocess.run", return_value=None)
     with tempfile.TemporaryFile() as fp:
         mocker.patch("tempfile.NamedTemporaryFile", return_value=fp)
@@ -960,4 +960,4 @@ def testWhatWebAgent_whenPluginStringIsList_emitsPluginNameAsLibraryName(
             for msg in agent_mock
             if msg.selector.endswith(".library")
         ]
-        assert library_names == ["cloudflare", "HttpOnly", "X-UA-Compatible"]
+        assert library_names == ["cloudflare"]
