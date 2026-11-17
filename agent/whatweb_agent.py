@@ -375,7 +375,8 @@ class AgentWhatWeb(
                                 values = list_plugin[1]
                                 versions = []
                                 library_name = plugin
-                                is_technology = True
+                                has_list_string = False
+                                has_plain_string = False
                                 for value in values:
                                     if "version" in value:
                                         if isinstance(value["version"], list):
@@ -384,10 +385,11 @@ class AgentWhatWeb(
                                             versions.append(value["version"])
                                     # Some plugins (e.g. HttpOnly) report a list of matched values, not a technology.
                                     if isinstance(value.get("string"), list):
-                                        is_technology = False
+                                        has_list_string = True
                                     elif "string" in value:
+                                        has_plain_string = True
                                         library_name = str(value["string"])
-                                if is_technology is True:
+                                if has_list_string is False or has_plain_string is True:
                                     self._send_detected_fingerprints(
                                         target, library_name, versions
                                     )

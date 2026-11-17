@@ -961,3 +961,29 @@ def testWhatWebAgent_whenPluginStringIsList_skipsTheFingerprint(
             if msg.selector.endswith(".library")
         ]
         assert library_names == ["cloudflare"]
+
+
+def testWhatWebAgent_whenPluginHasListAndPlainStrings_emitsThePlainString(
+    agent_mock: list[message.Message],
+    whatweb_test_agent: whatweb_agent.AgentWhatWeb,
+    domain_msg: message.Message,
+    mocker: plugin.MockerFixture,
+) -> None:
+    """A list-valued match must not hide a plain-string match of the same plugin, whatever their order."""
+    mocker.patch("subprocess.run", return_value=None)
+    with tempfile.TemporaryFile() as fp:
+        mocker.patch("tempfile.NamedTemporaryFile", return_value=fp)
+        fp.write(
+            b'["https://94.140.14.14/",200,[["HTTPServer",[{"string":[["lang"]],"certainty":100},'
+            b'{"name":"server string","string":"cloudflare","certainty":100}]]]]\n'
+        )
+        fp.seek(0)
+
+        whatweb_test_agent.process(domain_msg)
+
+        library_names = [
+            msg.data.get("library_name")
+            for msg in agent_mock
+            if msg.selector.endswith(".library")
+        ]
+        assert library_names == ["cloudflare"]
