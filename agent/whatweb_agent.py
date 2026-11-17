@@ -381,8 +381,9 @@ class AgentWhatWeb(
                                             versions.extend(value["version"])
                                         else:
                                             versions.append(value["version"])
-                                    if "string" in value:
-                                        library_name = str(value["string"])
+                                    # Some plugins (e.g. HttpOnly) report a list of matched values, not a name.
+                                    if isinstance(value.get("string"), str):
+                                        library_name = value["string"]
                                 self._send_detected_fingerprints(
                                     target, library_name, versions
                                 )

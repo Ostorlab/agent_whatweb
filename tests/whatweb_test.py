@@ -934,3 +934,30 @@ def testWhatWebAgent_whenUrlHasInvalidPort_shouldNotFail(
 
             assert len(agent_mock) > 0
             assert any(msg.data.get("name") == "example.com" for msg in agent_mock)
+
+
+def testWhatWebAgent_whenPluginStringIsList_emitsPluginNameAsLibraryName(
+    agent_mock: list[message.Message],
+    whatweb_test_agent: whatweb_agent.AgentWhatWeb,
+    domain_msg: message.Message,
+    mocker: plugin.MockerFixture,
+) -> None:
+    """The HttpOnly plugin reports cookie names as a list in `string`, the library name must not be that list."""
+    mocker.patch("subprocess.run", return_value=None)
+    with tempfile.TemporaryFile() as fp:
+        mocker.patch("tempfile.NamedTemporaryFile", return_value=fp)
+        fp.write(
+            b'["https://94.140.14.14/",200,[["HTTPServer",[{"name":"server string","string":"cloudflare",'
+            b'"certainty":100}]],["HttpOnly",[{"string":[["lang"]],"certainty":100}]],'
+            b'["X-UA-Compatible",[{"string":["ie=edge"],"certainty":100}]]]]\n'
+        )
+        fp.seek(0)
+
+        whatweb_test_agent.process(domain_msg)
+
+        library_names = [
+            msg.data.get("library_name")
+            for msg in agent_mock
+            if msg.selector.endswith(".library")
+        ]
+        assert library_names == ["cloudflare", "HttpOnly", "X-UA-Compatible"]
