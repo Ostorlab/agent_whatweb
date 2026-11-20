@@ -13,10 +13,5 @@ Plugin.define do
       :regexp => /<title[^>]*>\s*Daptin Admin\s*<\/title>/i,
       :name => "Daptin admin title",
     },
-    {
-      :search => "body",
-      :regexp => /https?:\/\/github\.com\/daptin\/daptin/i,
-      :name => "Daptin project URL",
-    },
   ]
 end
