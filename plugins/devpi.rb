@@ -15,7 +15,7 @@ Plugin.define do
     },
     {
       :search => "body",
-      :version => /devpi-server-([0-9]+(?:\.[0-9]+)+)/i,
+      :version => /class="footer-versions"[\s\S]{0,300}?devpi-server-([0-9]+(?:\.[0-9]+)+)/i,
       :name => "devpi-server footer version",
     },
   ]
