@@ -15,7 +15,7 @@ Plugin.define do
     },
     {
       :search => "body",
-      :regexp => /<link[^>]+rel=["']localizations["'][^>]*href=["']\/?locales\.json["']/i,
+      :regexp => /<link[^>]+(?=[^>]*\brel=["']localizations["'])[^>]*\bhref=["']\/?locales\.json["']/i,
       :name => "Etherpad localization marker",
     },
   ]
