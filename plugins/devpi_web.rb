@@ -10,11 +10,6 @@ Plugin.define do
   matches [
     {
       :search => "body",
-      :regexp => /<title[^>]*>\s*devpi\s*<\/title>/i,
-      :name => "devpi landing title",
-    },
-    {
-      :search => "body",
       :version => /class="footer-versions"[\s\S]{0,300}?devpi-web-([0-9]+(?:\.[0-9]+)+)/i,
       :name => "devpi-web footer version",
     },
