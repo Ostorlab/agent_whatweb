@@ -14,6 +14,10 @@ RUN apk update && apk add --virtual build-dependencies build-base ruby ruby-dev 
 RUN gem install bundler getoptlong resolv-replace
 RUN git clone https://github.com/urbanadventurer/WhatWeb.git
 WORKDIR /WhatWeb
+# JSON.fast_generate was removed from the json gem shipped with recent Ruby (3.4.x). WhatWeb still calls it when
+# writing results, which crashes every scan thread and leaves the whatweb process spinning forever.
+RUN grep -rl 'JSON.fast_generate' lib whatweb | xargs -r sed -i 's/JSON\.fast_generate/JSON.generate/g' \
+    && ! grep -rn 'fast_generate' lib whatweb
 COPY plugins/* /WhatWeb/plugins/
 RUN bundle install
 
