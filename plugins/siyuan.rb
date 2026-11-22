@@ -4,7 +4,7 @@ Plugin.define do
     "Ostorlab",
   ]
   version "0.1"
-  description "Identifies SiYuan, a local-first personal knowledge management system. The landing redirects to the desktop single-page application, whose SiYuan title and b3 dialog/app-loading or desktop-bundle markers are product-specific; the release is exposed only by the public /api/system/version API, which WhatWeb does not request at default aggression."
+  description "Identifies SiYuan, a local-first personal knowledge management system. The landing redirects to the desktop single-page application, whose SiYuan title and b3 dialog/app-loading or desktop-bundle markers are product-specific; the release is exposed only by the public /api/system/version API, which WhatWeb does not request at default aggression; a directly exposed kernel that answers the landing with a 401 JSON document is not identified."
   website "https://b3log.org/siyuan"
 
   matches [
