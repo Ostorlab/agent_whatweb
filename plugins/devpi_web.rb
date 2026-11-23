@@ -10,7 +10,7 @@ Plugin.define do
   matches [
     {
       :search => "body",
-      :version => /class="footer-versions"[\s\S]{0,300}?devpi-web-([0-9]+(?:\.[0-9]+)+)/i,
+      :version => /class="footer-versions".{0,300}?devpi-web-([0-9]+(?:\.[0-9]+)+)/mi,
       :name => "devpi-web footer version",
     },
   ]

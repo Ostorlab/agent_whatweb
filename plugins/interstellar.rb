@@ -10,7 +10,7 @@ Plugin.define do
   matches [
     {
       :search => "body",
-      :regexp => /(?=[\s\S]{0,65536}?data-shell=["']true["'])(?=[\s\S]{0,65536}?src=["']\/assets\/js\/main\.js["'])(?=[\s\S]{0,65536}?href=["']\/assets\/media\/favicon\/thesaurus\.png["'])/i,
+      :regexp => /\A(?=.*data-shell=["']true["'])(?=.*src=["']\/assets\/js\/main\.js["'])(?=.*href=["']\/assets\/media\/favicon\/thesaurus\.png["'])/mi,
       :name => "Interstellar landing shell (data-shell, application script, decoy favicon)",
     },
   ]

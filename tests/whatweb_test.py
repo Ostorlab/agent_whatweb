@@ -934,3 +934,28 @@ def testWhatWebAgent_whenUrlHasInvalidPort_shouldNotFail(
 
             assert len(agent_mock) > 0
             assert any(msg.data.get("name") == "example.com" for msg in agent_mock)
+
+
+def testWhatWebAgent_whenWhatWebTimesOut_logsErrorAndContinues(
+    agent_mock: list[message.Message],
+    whatweb_test_agent: whatweb_agent.AgentWhatWeb,
+    domain_msg: message.Message,
+    mocker: plugin.MockerFixture,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A WhatWeb run that never ends is stopped after the timeout, logged, and the agent moves on."""
+    run_mock = mocker.patch(
+        "subprocess.run",
+        side_effect=subprocess.TimeoutExpired(cmd="whatweb", timeout=300),
+    )
+
+    whatweb_test_agent.process(domain_msg)
+
+    assert run_mock.call_args.kwargs["timeout"] == 300
+    assert len(agent_mock) == 0
+    assert (
+        "WhatWeb scan of `https://ostorlab.co:443` was stopped: 300 seconds were not enough to finish it. "
+        "The likely cause is a plugin regex that backtracks badly on this page, or a very large page."
+        in caplog.text
+    )
+    assert "with `./whatweb <url>` in the agent image." in caplog.text

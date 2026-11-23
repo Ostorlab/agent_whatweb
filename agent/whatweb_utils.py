@@ -17,6 +17,9 @@ def run_whatweb_scan(target_url: str) -> bytes:
 
     Args:
         target_url: The URL to scan
+
+    Raises:
+        subprocess.TimeoutExpired: WhatWeb did not finish within WHATWEB_SCAN_TIMEOUT_SECONDS.
     """
     with tempfile.NamedTemporaryFile(delete=False) as fp:
         output_file = fp.name
@@ -28,13 +31,35 @@ def run_whatweb_scan(target_url: str) -> bytes:
             target_url,
         ]
 
-        subprocess.run(whatweb_command, cwd=definitions.WHATWEB_DIRECTORY, check=True)
+        try:
+            subprocess.run(
+                whatweb_command,
+                cwd=definitions.WHATWEB_DIRECTORY,
+                check=True,
+                timeout=definitions.WHATWEB_SCAN_TIMEOUT_SECONDS,
+            )
+        except subprocess.TimeoutExpired:
+            log_scan_timeout(target_url=target_url)
+            raise
 
         with open(output_file, "rb") as f:
             return f.read()
     finally:
         if os.path.exists(output_file):
             os.unlink(output_file)
+
+
+def log_scan_timeout(target_url: str) -> None:
+    """Log that WhatWeb ran out of time on a target.
+
+    Args:
+        target_url: The URL WhatWeb was scanning.
+    """
+    logger.error(
+        definitions.WHATWEB_SCAN_TIMEOUT_MESSAGE,
+        target_url,
+        definitions.WHATWEB_SCAN_TIMEOUT_SECONDS,
+    )
 
 
 def parse_whatweb_output(output_bytes: bytes) -> list[dict[str, str | None]]:

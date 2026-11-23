@@ -2,6 +2,11 @@
 
 WHATWEB_PATH = "./whatweb"
 WHATWEB_DIRECTORY = "/WhatWeb"
+WHATWEB_SCAN_TIMEOUT_SECONDS = 300
+WHATWEB_SCAN_TIMEOUT_MESSAGE = (
+    "WhatWeb scan of `%s` was stopped: %d seconds were not enough to finish it. The likely cause is a plugin "
+    "regex that backtracks badly on this page, or a very large page. rReproduce it with `./whatweb <url>` in the agent image."
+)
 
 BLACKLISTED_PLUGINS = [
     "X-Frame-Options",

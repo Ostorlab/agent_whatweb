@@ -1,1 +1,5 @@
 #This file will be used if we want to customize the Ruff configuration.
+
+[lint.isort]
+# One import per line: `from agent import definitions` and `from agent import whatweb_utils`, never grouped.
+force-single-line = true

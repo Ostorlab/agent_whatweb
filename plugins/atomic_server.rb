@@ -12,7 +12,7 @@ Plugin.define do
   matches [
     {
       :search => "body",
-      :regexp => /^(?=[\s\S]*<title[^>]*>\s*Atomic Data\s*<\/title>)(?=[\s\S]*The easiest way to create, share and model Linked Atomic Data\.)(?=[\s\S]*Meta tags and code added by Atomic-Server)/i,
+      :regexp => /\A(?=.*<title[^>]*>\s*Atomic Data\s*<\/title>)(?=.*The easiest way to create, share and model Linked Atomic Data\.)(?=.*Meta tags and code added by Atomic-Server)/mi,
       :name => "Atomic Data landing title and server markers",
     },
     {

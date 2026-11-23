@@ -10,7 +10,7 @@ Plugin.define do
   matches [
     {
       :search => "body",
-      :regexp => /^(?=[\s\S]*<title[^>]*>\s*Sprout Track\s*<\/title>)(?=[\s\S]*<meta(?=[^>]*\bname=["']description["'])(?=[^>]*\bcontent=(?:"[^"]*track\s+your\s+baby[^"]*"|'[^']*track\s+your\s+baby[^']*'))[^>]*>)/i,
+      :regexp => /\A(?=.*<title[^>]*>\s*Sprout Track\s*<\/title>)(?=.*<meta(?=[^>]*\bname=["']description["'])(?=[^>]*\bcontent=(?:"[^"]*track\s+your\s+baby[^"]*"|'[^']*track\s+your\s+baby[^']*'))[^>]*>)/mi,
       :name => "Sprout Track title and baby-tracking description",
     },
   ]

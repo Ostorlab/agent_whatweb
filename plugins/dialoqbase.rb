@@ -10,7 +10,7 @@ Plugin.define do
   matches [
     {
       :search => "body",
-      :regexp => /<title[^>]*>\s*Dialoqbase\s*<\/title>[\s\S]{0,2000}?<div\s+id=["']root["']/i,
+      :regexp => /<title[^>]*>\s*Dialoqbase\s*<\/title>.{0,2000}?<div\s+id=["']root["']/mi,
       :name => "Dialoqbase SPA landing",
     },
   ]

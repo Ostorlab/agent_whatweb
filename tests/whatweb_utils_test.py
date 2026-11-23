@@ -184,3 +184,29 @@ def testRunWhatWebScan_whenSubprocessFails_cleansUpFile(
         whatweb_utils.run_whatweb_scan("https://example.com")
 
     assert mock_unlink.call_count == 1
+
+
+def testRunWhatWebScan_whenWhatWebTimesOut_logsErrorRaisesAndCleansUpFile(
+    mocker: plugin.MockerFixture,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """The MCP tool's WhatWeb run is stopped after the timeout, logged, and the error reaches the caller."""
+    run_mock = mocker.patch(
+        "subprocess.run",
+        side_effect=subprocess.TimeoutExpired(cmd="whatweb", timeout=300),
+    )
+    mock_temp = mocker.patch("tempfile.NamedTemporaryFile")
+    mock_temp.return_value.__enter__.return_value.name = "/tmp/test"
+    mocker.patch("os.path.exists", return_value=True)
+    mock_unlink = mocker.patch("os.unlink")
+
+    with pytest.raises(subprocess.TimeoutExpired):
+        whatweb_utils.run_whatweb_scan("https://example.com")
+
+    assert run_mock.call_args.kwargs["timeout"] == 300
+    assert mock_unlink.call_count == 1
+    assert (
+        "WhatWeb scan of `https://example.com` was stopped: 300 seconds were not enough to finish it. "
+        "The likely cause is a plugin regex that backtracks badly on this page, or a very large page."
+        in caplog.text
+    )
