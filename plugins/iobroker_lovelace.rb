@@ -4,7 +4,7 @@ Plugin.define do
     "Ostorlab",
   ]
   version "0.1"
-  description "Identifies the ioBroker.lovelace adapter, an ioBroker visualization that reuses the Home Assistant Lovelace frontend. The landing document carries the ioBroker title and application-name markers together with the home-assistant custom element; the adapter release is exposed on the network by /auth/providers and the adapter package, which WhatWeb does not request at default aggression."
+  description "Identifies the ioBroker.lovelace adapter, an ioBroker visualization that reuses the Home Assistant Lovelace frontend. The landing document carries the ioBroker title and application-name markers together with the home-assistant custom element. The adapter release is not present on the landing and WhatWeb does not fetch the package or /auth/providers at default aggression, so version extraction is a gap."
   website "https://github.com/ioBroker/ioBroker.lovelace"
 
   matches [
