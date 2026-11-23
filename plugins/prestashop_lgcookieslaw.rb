@@ -18,10 +18,5 @@ Plugin.define do
       :regexp => /lgcookieslaw_accepted_purposes|__lglaw/i,
       :name => "lgcookieslaw consent state",
     },
-    {
-      :search => "body",
-      :version => /\/modules\/lgcookieslaw\/views\/(?:css\/front\.css|js\/front\.js)\?[^"' ]*?\bv=([0-9]+(?:\.[0-9]+){1,3})/i,
-      :name => "lgcookieslaw asset query version",
-    },
   ]
 end
