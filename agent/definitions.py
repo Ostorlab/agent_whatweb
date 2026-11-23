@@ -2,6 +2,9 @@
 
 WHATWEB_PATH = "./whatweb"
 WHATWEB_DIRECTORY = "/WhatWeb"
+# Upper bound for a single whatweb run. WhatWeb's own per-request limits (15s open, 30s per read, 10 redirects)
+# do not bound the whole process, which can then block the agent forever.
+WHATWEB_SCAN_TIMEOUT_SECONDS = 600
 
 BLACKLISTED_PLUGINS = [
     "X-Frame-Options",

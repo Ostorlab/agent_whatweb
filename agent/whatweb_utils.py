@@ -28,7 +28,12 @@ def run_whatweb_scan(target_url: str) -> bytes:
             target_url,
         ]
 
-        subprocess.run(whatweb_command, cwd=definitions.WHATWEB_DIRECTORY, check=True)
+        subprocess.run(
+            whatweb_command,
+            cwd=definitions.WHATWEB_DIRECTORY,
+            check=True,
+            timeout=definitions.WHATWEB_SCAN_TIMEOUT_SECONDS,
+        )
 
         with open(output_file, "rb") as f:
             return f.read()

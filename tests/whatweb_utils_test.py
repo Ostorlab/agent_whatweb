@@ -5,7 +5,7 @@ import subprocess
 import pytest
 from pytest_mock import plugin
 
-from agent import whatweb_utils
+from agent import definitions, whatweb_utils
 
 
 def testParseWhatWebOutput_whenEmptyBytes_returnsEmptyList() -> None:
@@ -183,4 +183,25 @@ def testRunWhatWebScan_whenSubprocessFails_cleansUpFile(
     with pytest.raises(subprocess.CalledProcessError):
         whatweb_utils.run_whatweb_scan("https://example.com")
 
+    assert mock_unlink.call_count == 1
+
+
+def testRunWhatWebScan_whenSubprocessTimesOut_raisesAndCleansUpFile(
+    mocker: plugin.MockerFixture,
+) -> None:
+    """Test run_whatweb_scan bounds the whatweb run with a timeout and cleans up the output file."""
+    run_mock = mocker.patch(
+        "subprocess.run", side_effect=subprocess.TimeoutExpired("cmd", 1)
+    )
+    mock_temp = mocker.patch("tempfile.NamedTemporaryFile")
+    mock_temp.return_value.__enter__.return_value.name = "/tmp/test"
+    mocker.patch("os.path.exists", return_value=True)
+    mock_unlink = mocker.patch("os.unlink")
+
+    with pytest.raises(subprocess.TimeoutExpired):
+        whatweb_utils.run_whatweb_scan("https://example.com")
+
+    assert (
+        run_mock.call_args.kwargs["timeout"] == definitions.WHATWEB_SCAN_TIMEOUT_SECONDS
+    )
     assert mock_unlink.call_count == 1

@@ -160,6 +160,12 @@ class AgentWhatWeb(
                     self._parse_emit_result(target, io.BytesIO(fp.read()))
             except subprocess.CalledProcessError as e:
                 logger.error("Error scanning target `%s`: %s", target, e)
+            except subprocess.TimeoutExpired:
+                logger.warning(
+                    "Scan of target `%s` timed out after %s seconds, skipping it.",
+                    target.name,
+                    definitions.WHATWEB_SCAN_TIMEOUT_SECONDS,
+                )
 
     def _prepare_targets(self, message: msg.Message) -> list[IPTarget | DomainTarget]:
         """Returns a list of target objects to be scanned."""
@@ -346,7 +352,12 @@ class AgentWhatWeb(
             f"--log-json-verbose={output_file}",
             target.target,
         ]
-        subprocess.run(whatweb_command, cwd=definitions.WHATWEB_DIRECTORY, check=True)
+        subprocess.run(
+            whatweb_command,
+            cwd=definitions.WHATWEB_DIRECTORY,
+            check=True,
+            timeout=definitions.WHATWEB_SCAN_TIMEOUT_SECONDS,
+        )
 
     def _parse_emit_result(
         self, target: DomainTarget | IPTarget, output_file: io.BytesIO

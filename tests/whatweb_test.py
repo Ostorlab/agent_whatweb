@@ -9,7 +9,7 @@ import pytest
 from ostorlab.agent.message import message
 from pytest_mock import plugin
 
-from agent import whatweb_agent
+from agent import definitions, whatweb_agent
 
 
 def testWhatWebAgent_withDomainMsgAndAllChecksEnabled_emitsFingerprints(
@@ -934,3 +934,38 @@ def testWhatWebAgent_whenUrlHasInvalidPort_shouldNotFail(
 
             assert len(agent_mock) > 0
             assert any(msg.data.get("name") == "example.com" for msg in agent_mock)
+
+
+def testWhatWebAgent_whenWhatWebTimesOut_skipsTargetAndContinuesProcessing(
+    agent_mock: list[message.Message],
+    whatweb_test_agent: whatweb_agent.AgentWhatWeb,
+    mocker: plugin.MockerFixture,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A whatweb run that exceeds the timeout is skipped with a warning and the next target is still scanned."""
+    ip_msg = message.Message.from_data(
+        selector="v3.asset.ip.v4.port.service",
+        data={
+            "host": "192.168.0.0",
+            "port": 80,
+            "mask": "31",
+            "protocol": "http",
+            "version": 4,
+        },
+    )
+    subprocess_mock = mocker.patch(
+        "subprocess.run",
+        side_effect=[subprocess.TimeoutExpired(cmd="whatweb", timeout=1), None],
+    )
+    mocker.patch("tempfile.NamedTemporaryFile", side_effect=tempfile.TemporaryFile)
+
+    whatweb_test_agent.process(ip_msg)
+
+    assert subprocess_mock.call_count == 2
+    assert all(
+        call.kwargs["timeout"] == definitions.WHATWEB_SCAN_TIMEOUT_SECONDS
+        for call in subprocess_mock.mock_calls
+    )
+    assert "192.168.0.0" in caplog.text
+    assert "timed out" in caplog.text
+    assert len(agent_mock) == 0
