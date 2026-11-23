@@ -10,7 +10,7 @@ Plugin.define do
   matches [
     {
       :search => "body",
-      :regexp => /window\.__gradio_mode__[\s\S]{0,600}?gradio:iframe-resizer-ready/i,
+      :regexp => /window\.__gradio_mode__.{0,600}?gradio:iframe-resizer-ready/mi,
       :name => "Gradio runtime markers",
     },
   ]

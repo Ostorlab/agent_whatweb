@@ -10,7 +10,7 @@ Plugin.define do
   matches [
     {
       :search => "body",
-      :regexp => /<title[^>]*>[^<]*-\s*Wavelog\s*<\/title>[\s\S]{0,100000}?(?:To connect your radio to Wavelog|www\.github\.com\/wavelog\/wavelog|assets\/js\/sections\/version_dialog\.js)/i,
+      :regexp => /<title[^>]*>[^<]*-\s*Wavelog\s*<\/title>.{0,100000}?(?:To connect your radio to Wavelog|www\.github\.com\/wavelog\/wavelog|assets\/js\/sections\/version_dialog\.js)/mi,
       :name => "Wavelog login title and footer",
     },
   ]

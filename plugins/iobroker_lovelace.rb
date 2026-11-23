@@ -10,7 +10,7 @@ Plugin.define do
   matches [
     {
       :search => "body",
-      :regexp => /<title[^>]*>\s*ioBroker\s*<\/title>[\s\S]{0,65536}?<meta[^>]+(?:name|property)=[\"']application-name[\"'][^>]+content=[\"']ioBroker[\"'][\s\S]{0,65536}?<home-assistant[\s>]/i,
+      :regexp => /<title[^>]*>\s*ioBroker\s*<\/title>.{0,65536}?<meta[^>]+(?:name|property)=[\"']application-name[\"'][^>]+content=[\"']ioBroker[\"'].{0,65536}?<home-assistant[\s>]/mi,
       :name => "ioBroker Lovelace dashboard title, application-name and Home Assistant element",
     },
   ]

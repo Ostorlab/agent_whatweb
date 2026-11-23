@@ -10,7 +10,7 @@ Plugin.define do
   matches [
     {
       :search => "body",
-      :regexp => /<title[^>]*>\s*SiYuan\s*<\/title>[\s\S]{0,65536}?(?:b3-dialog\s+b3-dialog--open\s+app-loading|stage\/build\/desktop\/main\.)/i,
+      :regexp => /<title[^>]*>\s*SiYuan\s*<\/title>.{0,65536}?(?:b3-dialog\s+b3-dialog--open\s+app-loading|stage\/build\/desktop\/main\.)/mi,
       :name => "SiYuan desktop SPA title and b3 UI markers",
     },
   ]

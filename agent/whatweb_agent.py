@@ -25,6 +25,7 @@ from ostorlab.runtimes import definitions as runtime_definitions
 from rich import logging as rich_logging
 
 from agent import definitions
+from agent import whatweb_utils
 from agent.mcp_server import mcp_runner
 
 logging.basicConfig(
@@ -160,6 +161,8 @@ class AgentWhatWeb(
                     self._parse_emit_result(target, io.BytesIO(fp.read()))
             except subprocess.CalledProcessError as e:
                 logger.error("Error scanning target `%s`: %s", target, e)
+            except subprocess.TimeoutExpired:
+                whatweb_utils.log_scan_timeout(target_url=target.target)
 
     def _prepare_targets(self, message: msg.Message) -> list[IPTarget | DomainTarget]:
         """Returns a list of target objects to be scanned."""
@@ -346,7 +349,12 @@ class AgentWhatWeb(
             f"--log-json-verbose={output_file}",
             target.target,
         ]
-        subprocess.run(whatweb_command, cwd=definitions.WHATWEB_DIRECTORY, check=True)
+        subprocess.run(
+            whatweb_command,
+            cwd=definitions.WHATWEB_DIRECTORY,
+            check=True,
+            timeout=definitions.WHATWEB_SCAN_TIMEOUT_SECONDS,
+        )
 
     def _parse_emit_result(
         self, target: DomainTarget | IPTarget, output_file: io.BytesIO
