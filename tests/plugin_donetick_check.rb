@@ -5,6 +5,7 @@
 
 class Plugin
   @plugins = []
+  ALLOWED = %i[name authors version description website dorks matches passive aggressive].freeze
 
   class << self
     attr_reader :plugins
@@ -16,9 +17,11 @@ class Plugin
     end
   end
 
-  def name(value = nil)
-    @name = value unless value.nil?
-    @name
+  ALLOWED.each do |attribute|
+    define_method(attribute) do |value = nil|
+      instance_variable_set("@#{attribute}", value) unless value.nil?
+      instance_variable_get("@#{attribute}")
+    end
   end
 
   def matches(value = nil)
@@ -26,12 +29,12 @@ class Plugin
     @matches || []
   end
 
-  def method_missing(*_args, &_block)
-    nil
+  def method_missing(name, *_args, &_block)
+    raise NoMethodError, "unknown WhatWeb Plugin DSL attribute: #{name}"
   end
 
-  def respond_to_missing?(*_args)
-    true
+  def respond_to_missing?(name, _include_private = false)
+    ALLOWED.include?(name)
   end
 end
 
@@ -77,6 +80,13 @@ failures << "Donetick landing body did not match" unless body_matched?(body_patt
 failures << "title-only lookalike matched" if body_matched?(body_patterns, TITLE_ONLY)
 failures << "skin-only lookalike matched" if body_matched?(body_patterns, SKIN_ONLY)
 failures << "unrelated page matched" if body_matched?(body_patterns, UNRELATED)
+
+begin
+  Plugin.new.instance_eval { websit "https://example.test" }
+  failures << "misspelled DSL attribute was accepted"
+rescue NoMethodError
+  # expected: the stand-in rejects an unknown DSL attribute
+end
 
 puts failures
 exit(failures.empty? ? 0 : 1)
