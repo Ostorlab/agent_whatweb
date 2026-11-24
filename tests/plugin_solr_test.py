@@ -1,4 +1,8 @@
-"""Behavioral tests for the Apache Solr plugin's dual-marker match."""
+"""Behavioral tests for the Apache Solr plugin's dual-marker match.
+
+The Ruby check script loads the plugin with a minimal DSL stand-in, so the
+dual-marker regex is exercised without starting the WhatWeb runtime.
+"""
 
 import pathlib
 import subprocess
