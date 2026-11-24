@@ -22,8 +22,8 @@ website "https://www.joomla.org/"
 
 matches [
   { :regexp=>/<meta name="generator" content="Joomla! - Open Source Content Management"/i, :name=>"generator meta" },
-  { :text=>"Joomla Administrator Login", :name=>"administrator login" },
+  { :regexp=>/com_login[\s\S]{0,8000}?id="form-login"[\s\S]{0,4000}?name="passwd"/i, :name=>"administrator login" },
   { :version=>/<title>Joomla Installer<\/title>[\s\S]{0,8000}?Joomla! ([0-9]+\.[0-9]+\.[0-9]+)/, :name=>"web installer" },
-  { :url=>'/administrator/manifests/files/joomla.xml', :version=>/<version>(.*?)<\/version>/ },
+  { :url=>'/administrator/manifests/files/joomla.xml', :version=>/<name>files_joomla<\/name>[\s\S]*?<version>(.*?)<\/version>/ },
 ]
 end

@@ -67,8 +67,32 @@ HTML
 ADMIN_PAGE = <<~HTML
   <!doctype html>
   <html lang="en-GB"><head><title>Example - Administration</title></head>
-  <body><h1>Joomla Administrator Login</h1></body></html>
+  <body>
+  <div id="com_login"><h1>Joomla Administrator Login</h1></div>
+  <form class="form-validate" action="/administrator/index.php" method="post" id="form-login">
+  <input id="mod-login-username" name="username">
+  <input id="mod-login-password" name="passwd">
+  </form></body></html>
 HTML
+
+ADMIN_TEXT_LOOKALIKE = <<~HTML
+  <!doctype html>
+  <html><head><title>Admin how-to</title></head>
+  <body><p>Joomla Administrator Login is the heading shown on the login page.</p></body></html>
+HTML
+
+MANIFEST_XML = <<~XML
+  <?xml version="1.0" encoding="UTF-8"?>
+  <extension type="file" method="upgrade">
+    <name>files_joomla</name>
+    <version>5.4.10</version>
+  </extension>
+XML
+
+NOT_JOOMLA_XML = <<~XML
+  <?xml version="1.0" encoding="UTF-8"?>
+  <extension><name>other</name><version>5.4.10</version></extension>
+XML
 
 TITLE_ONLY_LOOKALIKE = <<~HTML
   <!doctype html>
@@ -120,9 +144,15 @@ failures << "front page did not match" unless page_matched?(plugin, FRONT_PAGE)
 failures << "vulnerable installer page did not match" unless page_matched?(plugin, INSTALLER_VULNERABLE)
 failures << "fixed installer page did not match" unless page_matched?(plugin, INSTALLER_FIXED)
 failures << "administrator login did not match" unless page_matched?(plugin, ADMIN_PAGE)
+failures << "administrator-text lookalike matched" if page_matched?(plugin, ADMIN_TEXT_LOOKALIKE)
 failures << "title-only lookalike matched" if page_matched?(plugin, TITLE_ONLY_LOOKALIKE)
 failures << "mention lookalike matched" if page_matched?(plugin, MENTION_LOOKALIKE)
 failures << "other generator lookalike matched" if page_matched?(plugin, OTHER_GENERATOR_LOOKALIKE)
+
+manifest_version = version_of(plugin, MANIFEST_XML)
+not_joomla_version = version_of(plugin, NOT_JOOMLA_XML)
+failures << "manifest version was #{manifest_version.inspect}" unless manifest_version == "5.4.10"
+failures << "non-Joomla XML version was #{not_joomla_version.inspect}" unless not_joomla_version.nil?
 
 vulnerable_version = version_of(plugin, INSTALLER_VULNERABLE)
 fixed_version = version_of(plugin, INSTALLER_FIXED)
