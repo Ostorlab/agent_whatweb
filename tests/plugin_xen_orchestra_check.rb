@@ -65,7 +65,9 @@ plugins_directory = ARGV[0] or abort "usage: ruby plugin_xen_orchestra_check.rb 
 load File.join(plugins_directory, "xen_orchestra.rb")
 
 plugin = Plugin.plugins.fetch(0)
-regexp = plugin.matches.fetch(0).fetch(:regexp)
+match = plugin.matches.fetch(0)
+abort "expected :search => body" unless match[:search] == "body"
+regexp = Regexp.new(match[:regexp])
 
 cases = {
   "Xen Orchestra landing" => [XEN_ORCHESTRA_LANDING, true],
@@ -75,7 +77,7 @@ cases = {
 }
 
 failures = cases.filter_map do |name, (body, expected)|
-  actual = !regexp.match(body).nil?
+  actual = !body.scan(regexp).empty?
   "#{name}: expected #{expected}, got #{actual}" if actual != expected
 end
 

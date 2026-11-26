@@ -6,7 +6,10 @@ runtime.
 """
 
 import pathlib
+import shutil
 import subprocess
+
+import pytest
 
 PLUGINS_DIRECTORY = pathlib.Path(__file__).parent.parent / "plugins"
 CHECK_SCRIPT = pathlib.Path(__file__).parent / "plugin_xen_orchestra_check.rb"
@@ -16,6 +19,8 @@ def testPlugin_whenXenOrchestraLandingOrLookalikes_matchesOnlyTheProductMarkers(
     None
 ):
     """The title and SPA container identify Xen Orchestra; lookalikes do not."""
+    if shutil.which("ruby") is None:
+        pytest.skip("ruby not installed")
     result = subprocess.run(
         [
             "ruby",
