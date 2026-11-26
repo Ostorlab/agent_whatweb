@@ -76,6 +76,11 @@ OTHER_PRODUCT = <<~HTML
   <body><a href="/builder/">Builder</a></body></html>
 HTML
 
+DOCS_WITH_BUILDER_PATH = <<~HTML
+  <!doctype html><html><head><title>Budibase</title></head>
+  <body><h1>Budibase documentation</h1><p>Open <code>/builder/</code> to start.</p></body></html>
+HTML
+
 plugins_directory = ARGV[0] or abort "usage: ruby plugin_budibase_check.rb <plugins directory>"
 load File.join(plugins_directory, "budibase.rb")
 
@@ -90,6 +95,7 @@ cases = {
   "title-only page" => [TITLE_ONLY, false],
   "docs title page" => [DOCS_TITLE, false],
   "other product" => [OTHER_PRODUCT, false],
+  "docs with /builder/ path" => [DOCS_WITH_BUILDER_PATH, false],
 }
 
 failures = cases.filter_map do |name, (body, expected)|
