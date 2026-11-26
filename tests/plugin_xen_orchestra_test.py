@@ -12,7 +12,9 @@ PLUGINS_DIRECTORY = pathlib.Path(__file__).parent.parent / "plugins"
 CHECK_SCRIPT = pathlib.Path(__file__).parent / "plugin_xen_orchestra_check.rb"
 
 
-def testPlugin_whenXenOrchestraLandingOrLookalikes_matchesOnlyTheProductMarkers() -> None:
+def testPlugin_whenXenOrchestraLandingOrLookalikes_matchesOnlyTheProductMarkers() -> (
+    None
+):
     """The title and SPA container identify Xen Orchestra; lookalikes do not."""
     result = subprocess.run(
         [
