@@ -4,6 +4,8 @@ import pathlib
 import shutil
 import subprocess
 
+import pytest
+
 PLUGINS_DIRECTORY = pathlib.Path(__file__).parent.parent / "plugins"
 CHECK_SCRIPT = pathlib.Path(__file__).parent / "plugin_faveo_check.rb"
 
@@ -11,8 +13,6 @@ CHECK_SCRIPT = pathlib.Path(__file__).parent / "plugin_faveo_check.rb"
 def testPlugin_whenFaveoLandingsOrLookalikes_matchesOnlyTheProductFooter() -> None:
     """The shipped powered-by footer identifies Faveo; lookalikes do not."""
     if shutil.which("ruby") is None:
-        import pytest
-
         pytest.skip("ruby not available")
     result = subprocess.run(
         [
