@@ -17,6 +17,7 @@
 #
 # The Asteroid CVE-2026-137955 rule reads the same landing/redirect and then
 # exercises the `@startdot` path; this plugin performs no extra request.
+# Version extraction is covered by both the footer and the server-header match.
 ##
 Plugin.define do
   name "PlantUML"
