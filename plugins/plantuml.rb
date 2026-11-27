@@ -36,7 +36,7 @@ Plugin.define do
     },
     {
       :search => "body",
-      :version => /PlantUML version\s+(\d{1,3}\.\d{4}\.\d{1,3})/mi,
+      :version => %r{<p[^>]*>\s*PlantUML version\s+(\d{1,3}\.\d{4}\.\d{1,3})}mi,
       :name => "PlantUML release footer",
     },
     {
