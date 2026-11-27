@@ -10,7 +10,11 @@ Plugin.define do
   matches [
     {
       :search => "body",
-      :regexp => /\A(?=.*<title[^>]*>\s*Hex\s*<\/title>)(?=.*<meta[^>]+name=["']description["'][^>]+content=["']A package manager for the Erlang ecosystem["'])/mi,
+      :regexp => /
+        \A
+        (?=.*<title[^>]*>\s*Hex\s*<\/title>)  # exact Hex document title
+        (?=.*<meta[^>]+name=["']description["'][^>]+content=["']A\s+package\s+manager\s+for\s+the\s+Erlang\s+ecosystem["'])  # Erlang ecosystem description
+      /mix,
       :name => "Hex landing title and Erlang ecosystem description",
     },
   ]
