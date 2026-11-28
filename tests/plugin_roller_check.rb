@@ -81,6 +81,13 @@ TEXT_ONLY = <<~HTML
   <body>Apache Roller is mentioned here.</body></html>
 HTML
 
+FOOTER_ONLY = <<~HTML
+  <!doctype html><html><head><title>Unrelated</title></head><body>
+  <div id="footer">Powered by
+  <a href="http://roller.apache.org">Apache Roller</a> 6.1.5</div>
+  </body></html>
+HTML
+
 plugins_directory = ARGV[0]
 load File.join(plugins_directory, "roller.rb")
 plugin = Plugin.plugins.last
@@ -99,9 +106,12 @@ failures << "6.1.6 setup page did not match" unless body_matched?(body_patterns,
 failures << "generic page matched" if body_matched?(body_patterns, GENERIC)
 failures << "asset-only lookalike matched" if body_matched?(body_patterns, ASSET_ONLY)
 failures << "text-only lookalike matched" if body_matched?(body_patterns, TEXT_ONLY)
+failures << "footer-only lookalike matched" if body_matched?(body_patterns, FOOTER_ONLY)
 
 version_match = body_patterns.lazy.map { |pattern| FRONT_615.match(pattern) }.find { |match| match && match[1] }
 failures << "release was not captured" unless version_match && version_match[1] == "6.1.5"
+footer_version = body_patterns.lazy.map { |pattern| FOOTER_ONLY.match(pattern) }.find { |match| match && match[1] }
+failures << "footer-only lookalike captured a release" if footer_version
 
 puts failures
 exit(failures.empty? ? 0 : 1)

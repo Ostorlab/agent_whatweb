@@ -34,7 +34,7 @@ Plugin.define do
     },
     {
       :search => "body",
-      :version => /Powered by\s*(?:<[^>]+>\s*)*Apache Roller\s*(?:<\/a>)?\s*v?([0-9]+(?:\.[0-9]+)+)/mi,
+      :version => /(?:roller-ui\/styles\/roller\.css|roller-ui\/menu\.rol|roller-ui\/login|theme\/scripts\/roller\.js)[\s\S]*?Powered by\s*(?:<[^>]+>\s*)*Apache Roller\s*(?:<\/a>)?\s*v?([0-9]+(?:\.[0-9]+)+)/mi,
       :name => "Apache Roller front-page footer version",
     },
   ]
